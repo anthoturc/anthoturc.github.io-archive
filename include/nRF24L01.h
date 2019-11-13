@@ -1,124 +1,145 @@
+#pragma once
+
+#ifndef _NRF_24_
+#define _NRF_24_
+
+#include <stdint.h>
+
 /*
-    Copyright (c) 2007 Stefan Engelke <mbox@stefanengelke.de>
-	Portions Copyright (C) 2011 Greg Copeland
-    Permission is hereby granted, free of charge, to any person
-    obtaining a copy of this software and associated documentation
-    files (the "Software"), to deal in the Software without
-    restriction, including without limitation the rights to use, copy,
-    modify, merge, publish, distribute, sublicense, and/or sell copies
-    of the Software, and to permit persons to whom the Software is
-    furnished to do so, subject to the following conditions:
-    The above copyright notice and this permission notice shall be
-    included in all copies or substantial portions of the Software.
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-    DEALINGS IN THE SOFTWARE.
-*/
+ *  These macros correspond to the min and max frequency that our 
+ *  module is able to transmit/receive at.
+ */
+#define MIN_FREQ 2400e6ul
+#define MAX_FREQ 2525e6ul
 
-/* Memory Map */
-#define NRF_CONFIG  0x00
-#define EN_AA       0x01
-#define EN_RXADDR   0x02
-#define SETUP_AW    0x03
-#define SETUP_RETR  0x04
-#define RF_CH       0x05
-#define RF_SETUP    0x06
-#define NRF_STATUS  0x07
-#define OBSERVE_TX  0x08
-#define CD          0x09
-#define RX_ADDR_P0  0x0A
-#define RX_ADDR_P1  0x0B
-#define RX_ADDR_P2  0x0C
-#define RX_ADDR_P3  0x0D
-#define RX_ADDR_P4  0x0E
-#define RX_ADDR_P5  0x0F
-#define TX_ADDR     0x10
-#define RX_PW_P0    0x11
-#define RX_PW_P1    0x12
-#define RX_PW_P2    0x13
-#define RX_PW_P3    0x14
-#define RX_PW_P4    0x15
-#define RX_PW_P5    0x16
-#define FIFO_STATUS 0x17
-#define DYNPD	    0x1C
-#define FEATURE	    0x1D
+/*
+ *  A channel is a specific frequency at which the nRF24L01
+ *  can receive and transmit data. This module can
+ *  do both between 2,400 - 2,525 MHz. Each channel can 
+ *  occupy bandwidth of less than 1 MHz. So the number of channels
+ *  for this module is ~ 125
+ * 
+ *  Note that each channel will occupy bandwidth based on the air data
+ *  rate.
+ */
+#define NUM_CHANNELS 125
 
-/* Bit Mnemonics */
-#define MASK_RX_DR  6
-#define MASK_TX_DS  5
-#define MASK_MAX_RT 4
-#define EN_CRC      3
-#define CRCO        2
-#define PWR_UP      1
-#define PRIM_RX     0
-#define ENAA_P5     5
-#define ENAA_P4     4
-#define ENAA_P3     3
-#define ENAA_P2     2
-#define ENAA_P1     1
-#define ENAA_P0     0
-#define ERX_P5      5
-#define ERX_P4      4
-#define ERX_P3      3
-#define ERX_P2      2
-#define ERX_P1      1
-#define ERX_P0      0
-#define AW          0
-#define ARD         4
-#define ARC         0
-#define PLL_LOCK    4
-#define RF_DR       3
-#define RF_PWR      6
-#define RX_DR       6
-#define TX_DS       5
-#define MAX_RT      4
-#define RX_P_NO     1
-#define TX_FULL     0
-#define PLOS_CNT    4
-#define ARC_CNT     0
-#define TX_REUSE    6
-#define FIFO_FULL   5
-#define TX_EMPTY    4
-#define RX_FULL     1
-#define RX_EMPTY    0
-#define DPL_P5	    5
-#define DPL_P4	    4
-#define DPL_P3	    3
-#define DPL_P2	    2
-#define DPL_P1	    1
-#define DPL_P0	    0
-#define EN_DPL	    2
-#define EN_ACK_PAY  1
-#define EN_DYN_ACK  0
+/*
+ *  This macro will determine the frequency at a specified channel.
+ *  Since there are 125 channels, we can add the channel to the min
+ *  frequency to get the frequency of the channel.
+ */
+#define FREQ(channel) (MIN_FREQ + (channel))
 
-/* Instruction Mnemonics */
-#define R_REGISTER    0x00
-#define W_REGISTER    0x20
-#define REGISTER_MASK 0x1F
-#define ACTIVATE      0x50
-#define R_RX_PL_WID   0x60
-#define R_RX_PAYLOAD  0x61
-#define W_TX_PAYLOAD  0xA0
-#define W_ACK_PAYLOAD 0xA8
-#define FLUSH_TX      0xE1
-#define FLUSH_RX      0xE2
-#define REUSE_TX_PL   0xE3
-#define RF24_NOP      0xFF
+/*
+ *  Macros for the pins that are MCU will
+ *  have access to. Not all of them will be used.
+ *  They are mainly here to document the purpose 
+ *  of each pin on the nRF24L01
+ */
+#define GND_PIN     1
+#define VCC         2 
 
-/* Non-P omissions */
-#define LNA_HCURR   0
+/* 
+ *  The CE (Chip Enable) pin is an active-High pin. 
+ *  When selected the nRF24L01 will either transmit 
+ *  or receive, depending on the mode it is in.
+ */        
+#define CE_PIN      3
 
-/* P model memory Map */
-#define RPD         0x09
-#define W_TX_PAYLOAD_NO_ACK  0xB0
+/*
+ *  The CSN (Chip Select Not) pin is an active-Low pin and will
+ *  usually be HIGH. When the pin goes low, the nRF24L01 begins 
+ *  listening on its SPI port for data and processes it.
+ */
+#define CSN_PIN     4
 
-/* P model bit Mnemonics */
-#define RF_DR_LOW   5
-#define RF_DR_HIGH  3
-#define RF_PWR_LOW  1
-#define RF_PWR_HIGH 2
+/*
+ *  The SCK (Serial Clock) pin will take the clock from the 
+ *  SPI bus master.
+ */
+#define SCK_PIN     5
+
+/*
+ *  The MOSI (Master Out Slave In) is SPI input to the nRF24L01.
+ */ 
+#define MOSI_PIN    6
+
+/*
+ *  The MISO (Master In Slave Out) is the SPI output from the nRF24L01.
+ */
+#define MISO_PIN    7
+
+/*
+ *  The IRQ pin is an interrupt pin that will alert the master when new
+ *  data is available. 
+ */
+#define IRQ_PIN     8
+
+/*
+ *  The module uses a packet structure called Enhanced ShockBurst.
+ *  This structure is broken down into 5 fields. 
+ * 
+ *  These fields can be modeled using bit fields.
+ * 
+ *  TODO: Check the endianess of the Feather to make sure
+ *  the order of the struct fields are correct
+ */
+
+typedef union
+{
+    /* This is the frame that will be send over SPI */
+    uint64_t data_frame;
+    typedef struct
+    {
+        /* preable is 1 byte */
+        uint8_t preamble;
+        /* addresses can be 3-5 bytes wide, we can use 3 bytes */
+        uint32_t addr : 24;
+        /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
+        uint16_t packet_ctrl : 9;
+        /* we will use 2 bytes */
+        uint8_t byte1;
+        uint8_t byte2;
+        /* this byte is just padding */
+        uint8_t byte3 : 7;
+    } bits_t;
+} packet_u;
+
+/*
+ *  The following contains the registers of 
+ *  the devices. This includes the register names
+ *  and their addresses.
+ */
+enum
+{
+    CONFIG          = 0x00,
+    EN_AA           = 0x01,
+    EN_RXADDR       = 0x02,
+    SETUP_AW        = 0x03,
+    SETUP_RETR      = 0x04,
+    RF_CH           = 0x05,
+    RF_SETUP        = 0x06,
+    STATUS          = 0x07,
+    OBSERVE_TX      = 0x08,
+    CD              = 0x09,
+    RX_ADDR_P0      = 0x0A,
+    RX_ADDR_P1      = 0x0B,
+    RX_ADDR_P2      = 0x0C,
+    RX_ADDR_P3      = 0x0D,
+    RX_ADDR_P4      = 0x0E,
+    RX_ADDR_P5      = 0x0F,
+    TX_ADDR         = 0x10,
+    RX_PW_P0        = 0x11,
+    RX_PW_P1        = 0x12,
+    RX_PW_P2        = 0x13,
+    RX_PW_P3        = 0x14,
+    RX_PW_P4        = 0x15,
+    RX_PW_P5        = 0x16,
+    FIFO_STATUS     = 0x17,
+    /* Registers in this gap are used for testing */
+    DYNPD           = 0x1C,
+    FEATURE         = 0x1D,
+};
+
+#endif /* _NRF_24_ */
