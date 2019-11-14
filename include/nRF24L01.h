@@ -1,3 +1,14 @@
+/*
+ *  This header file is based on the specificaitons made in section
+ *  8 of the nRF24L01+ data sheet.
+ *  
+ *  SPI has a max data rate of 10Mbps (cannot be configured by program)
+ *  
+ *  Each new command must start with a high to low transition on CSN (i.e. CSN is active low).
+ *  
+ *  This library is meant to be run on the Adafruit ESP 32 Feather.
+ */
+
 #pragma once
 
 #ifndef _NRF_24_
@@ -85,6 +96,10 @@
  *  TODO: Check the endianess of the Feather to make sure
  *  the order of the struct fields are correct
  */
+
+#define MISO_PIN  
+#define MOSI_PIN
+
 
 typedef union
 {
