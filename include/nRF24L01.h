@@ -11,6 +11,7 @@
  */
 #define MIN_FREQ 2400e6ul
 #define MAX_FREQ 2525e6ul
+#define MHz 1e6ul
 
 /*
  *  A channel is a specific frequency at which the nRF24L01
@@ -29,7 +30,7 @@
  *  Since there are 125 channels, we can add the channel to the min
  *  frequency to get the frequency of the channel.
  */
-#define FREQ(channel) (MIN_FREQ + (channel))
+#define FREQ(channel) (MIN_FREQ + (channel * MHz))
 
 /*
  *  Macros for the pins that are MCU will
@@ -77,6 +78,70 @@
 #define IRQ_PIN     8
 
 /*
+ * PIN definitions of CONFIG (0x00) register
+ */
+
+/*
+ * RX/TX control
+ * 
+ * 1: PRX
+ * 0: PTX
+ */
+#define PRIM_RX 0
+
+/*
+ * Enable or disable power up mode.  In power up mode, chip is disabled
+ * but register values are maintained and accessable via SPI
+ * 
+ * 1: POWER UP
+ * 0: POWER DOWN
+ */
+#define PWR_UP 1
+
+/*
+ * CRC encoding scheme.  Used by Enhanced ShockBurst for error
+ * detection.  CRC bytes are the last 1-2 bytes of the Enhanced
+ * ShockBurst packet.
+ * 
+ * 0: 1-byte
+ * 1: 2-byte
+ */
+#define CRCO 2
+
+/*
+ * Enable CRC
+ * 
+ * 0: Disable
+ * 1: Enable
+ */
+#define EN_CRC 3
+
+/*
+ * Mask interrupt caused by MAX_RT (max amount of repeated transmits)
+ * 
+ * 0: Reflect MAX_RT as active low interrupt on IRQ pin
+ * 1: Interrupt not reflected on IRQ pin
+ */
+#define MASK_MAX_RT 4
+
+/*
+ * Mask interrupt caused by TX_DS (data sent)
+ * 
+ * 0: Reflect TX_DS as active low interrupt on IRQ pin
+ * 1: Interrupt not reflected on IRQ pin
+ */
+#define MASK_TX_DS 5
+
+/*
+ * Mask interrupt caused by RX_DR (data recieved)
+ * 
+ * 0: Reflect RX_DR as active low interrupt on IRQ pin
+ * 1: Interrupt not reflected on IRQ pin
+ */
+#define MASK_RX_DR 6
+
+
+/*
  *  The module uses a packet structure called Enhanced ShockBurst.
  *  This structure is broken down into 5 fields. 
  * 
@@ -85,61 +150,64 @@
  *  TODO: Check the endianess of the Feather to make sure
  *  the order of the struct fields are correct
  */
+namespace nRF24 {
 
-typedef union
-{
-    /* This is the frame that will be send over SPI */
-    uint64_t data_frame;
-    typedef struct
+    typedef union
     {
-        /* preable is 1 byte */
-        uint8_t preamble;
-        /* addresses can be 3-5 bytes wide, we can use 3 bytes */
-        uint32_t addr : 24;
-        /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
-        uint16_t packet_ctrl : 9;
-        /* we will use 2 bytes */
-        uint8_t byte1;
-        uint8_t byte2;
-        /* this byte is just padding */
-        uint8_t byte3 : 7;
-    } bits_t;
-} packet_u;
+        /* This is the frame that will be send over SPI */
+        uint64_t data_frame;
+        typedef struct
+        {
+            /* preable is 1 byte */
+            uint8_t preamble;
+            /* addresses can be 3-5 bytes wide, we can use 3 bytes */
+            uint32_t addr : 24;
+            /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
+            uint16_t packet_ctrl : 9;
+            /* we will use 2 bytes */
+            uint8_t byte1;
+            uint8_t byte2;
+            /* this byte is just padding */
+            uint8_t byte3 : 7;
+        } bits_t;
+    } packet_u;
 
-/*
- *  The following contains the registers of 
- *  the devices. This includes the register names
- *  and their addresses.
- */
-enum
-{
-    CONFIG          = 0x00,
-    EN_AA           = 0x01,
-    EN_RXADDR       = 0x02,
-    SETUP_AW        = 0x03,
-    SETUP_RETR      = 0x04,
-    RF_CH           = 0x05,
-    RF_SETUP        = 0x06,
-    STATUS          = 0x07,
-    OBSERVE_TX      = 0x08,
-    CD              = 0x09,
-    RX_ADDR_P0      = 0x0A,
-    RX_ADDR_P1      = 0x0B,
-    RX_ADDR_P2      = 0x0C,
-    RX_ADDR_P3      = 0x0D,
-    RX_ADDR_P4      = 0x0E,
-    RX_ADDR_P5      = 0x0F,
-    TX_ADDR         = 0x10,
-    RX_PW_P0        = 0x11,
-    RX_PW_P1        = 0x12,
-    RX_PW_P2        = 0x13,
-    RX_PW_P3        = 0x14,
-    RX_PW_P4        = 0x15,
-    RX_PW_P5        = 0x16,
-    FIFO_STATUS     = 0x17,
-    /* Registers in this gap are used for testing */
-    DYNPD           = 0x1C,
-    FEATURE         = 0x1D,
-};
+    /*
+    *  The following contains the registers of 
+    *  the devices. This includes the register names
+    *  and their addresses.
+    */
 
+    enum registers
+    {
+        CONFIG          = 0x00,
+        EN_AA           = 0x01,
+        EN_RXADDR       = 0x02,
+        SETUP_AW        = 0x03,
+        SETUP_RETR      = 0x04,
+        RF_CH           = 0x05,
+        RF_SETUP        = 0x06,
+        STATUS          = 0x07,
+        OBSERVE_TX      = 0x08,
+        CD              = 0x09,
+        RX_ADDR_P0      = 0x0A,
+        RX_ADDR_P1      = 0x0B,
+        RX_ADDR_P2      = 0x0C,
+        RX_ADDR_P3      = 0x0D,
+        RX_ADDR_P4      = 0x0E,
+        RX_ADDR_P5      = 0x0F,
+        TX_ADDR         = 0x10,
+        RX_PW_P0        = 0x11,
+        RX_PW_P1        = 0x12,
+        RX_PW_P2        = 0x13,
+        RX_PW_P3        = 0x14,
+        RX_PW_P4        = 0x15,
+        RX_PW_P5        = 0x16,
+        FIFO_STATUS     = 0x17,
+        /* Registers in this gap are used for testing */
+        DYNPD           = 0x1C,
+        FEATURE         = 0x1D,
+    };
+
+} // nRF24
 #endif /* _NRF_24_ */
