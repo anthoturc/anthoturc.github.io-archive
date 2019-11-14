@@ -27,7 +27,7 @@ while [ "$( cat tmp_prev_usb.txt )" == "$( cat tmp_curr_usb.txt )" ]; do
 done
 
 
-DEV_PORT=$( comm -23 tmp_curr_usb.txt tmp_prev_usb.txt | head -n 1 )
+DEV_PORT=$( comm -23 tmp_curr_usb.txt tmp_prev_usb.txt | grep -E 'tty|cu' ) # tty for linux, cu for mac
 printf "\nConnected! $DAVICE_PATH$DEV_PORT"
 rm tmp_curr_usb.txt tmp_prev_usb.txt
 

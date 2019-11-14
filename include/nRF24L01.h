@@ -259,35 +259,36 @@
  */
 namespace nRF24 {
 
-#define MISO_PIN    12
-#define MOSI_PIN    13
-#define SCK_PIN     14
+/* Why are these defined twice? */
+// #define MISO_PIN    12
+// #define MOSI_PIN    13
+// #define SCK_PIN     14
 
 
-// union
-// {
-//     /* This is the frame that will be send over SPI */
-//     uint64_t data_frame;
-//     typedef struct
-//     {
-//         /* This is the frame that will be send over SPI */
-//         uint64_t data_frame;
-//         typedef struct
-//         {
-//             /* preable is 1 byte */
-//             uint8_t preamble;
-//             /* addresses can be 3-5 bytes wide, we can use 3 bytes */
-//             uint32_t addr : 24;
-//             /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
-//             uint16_t packet_ctrl : 9;
-//             /* we will use 2 bytes */
-//             uint8_t byte1;
-//             uint8_t byte2;
-//             /* this byte is just padding */
-//             uint8_t byte3 : 7;
-//         } bits_t;
-//     } packet_u;
-// };
+typedef union
+{
+    /* This is the frame that will be send over SPI */
+    uint64_t data_frame;
+    typedef struct
+    {
+        /* This is the frame that will be send over SPI */
+        uint64_t data_frame;
+        typedef struct
+        {
+            /* preable is 1 byte */
+            uint8_t preamble;
+            /* addresses can be 3-5 bytes wide, we can use 3 bytes */
+            uint32_t addr : 24;
+            /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
+            uint16_t packet_ctrl : 9;
+            /* we will use 2 bytes */
+            uint8_t byte1;
+            uint8_t byte2;
+            /* this byte is just padding */
+            uint8_t byte3 : 7;
+        } bits_t;
+    } packet_u;
+} data_frame_u;
 
     /*
     *  The following contains the registers of 
