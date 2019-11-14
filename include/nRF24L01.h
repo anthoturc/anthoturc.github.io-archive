@@ -1,3 +1,14 @@
+/*
+ *  This header file is based on the specificaitons made in section
+ *  8 of the nRF24L01+ data sheet.
+ *  
+ *  SPI has a max data rate of 10Mbps (cannot be configured by program)
+ *  
+ *  Each new command must start with a high to low transition on CSN (i.e. CSN is active low).
+ *  
+ *  This library is meant to be run on the Adafruit ESP 32 Feather.
+ */
+
 #pragma once
 
 #ifndef _NRF_24_
@@ -152,7 +163,20 @@
  */
 namespace nRF24 {
 
+<<<<<<< HEAD
     typedef union
+=======
+#define MISO_PIN    12
+#define MOSI_PIN    13
+#define SCK_PIN     14
+
+
+typedef union
+{
+    /* This is the frame that will be send over SPI */
+    uint64_t data_frame;
+    typedef struct
+>>>>>>> c0cfa7b24b842898143d4c8d798dbf45387e565d
     {
         /* This is the frame that will be send over SPI */
         uint64_t data_frame;
