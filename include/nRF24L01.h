@@ -97,8 +97,9 @@
  *  the order of the struct fields are correct
  */
 
-#define MISO_PIN  
-#define MOSI_PIN
+#define MISO_PIN    12
+#define MOSI_PIN    13
+#define SCK_PIN     14
 
 
 typedef union
