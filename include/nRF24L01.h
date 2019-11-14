@@ -88,6 +88,7 @@
  */
 #define IRQ_PIN     8
 
+
 /*
  * PIN definitions of CONFIG (0x00) register
  */
@@ -153,6 +154,101 @@
 
 
 /*
+ * PIN definitions of SETUP_AW (0x03) register 
+ * (setup address widths for data pipes)
+ */
+
+/*
+ * RX/TX Address field width
+ * 
+ * AW_1=0 and AW_0=0: Illegal
+ * AW_1=0 and AW_0=1: 3 bytes
+ * AW_1=1 and AW_0=0: 4 bytes
+ * AW_1=1 and AW_0=1: 5 bytes
+ */
+#define AW_0 0
+#define AW_1 1
+
+
+/*
+ * PIN definitions of SETUP_RETR (0x04) register 
+ * (setup of automatic retransmission)
+ */
+
+/*
+ * Auto Retransmission delay: every additional bit of
+ * ARD, given by ARD_3:0 corresponds to an additional
+ * 250 microseconds with '0000' = wait 250 microseconds
+ */
+#define ARD_0 4
+#define ARD_1 5
+#define ARD_2 6
+#define ARD_3 7
+
+/*
+ * Auto Retransmission count: every additional bit of
+ * ARC, given by ARC_3:0 corresponds to an additional
+ * retransmission with 
+ * 
+ * '0000' = retransmit disabled
+ * '0001' = up to 1 retransmit
+ * '1111' = up to 15 retransmit
+ */
+#define ARC_0 0
+#define ARC_1 1
+#define ARC_2 2
+#define ARC_3 3
+
+
+/*
+ * PIN definitions of RF_CH (0x05) register 
+ * (setup RF channel i.e. operating frequency)
+ */
+
+/*
+ * RF_CH_6:0 represents the channel for our communication 
+ * 
+ * Frequency is given by 2.4GHz + (channel * MHz)
+ * Max channel = 125 = '1111101'
+ */
+#define RF_CH_0 0
+#define RF_CH_1 1
+#define RF_CH_2 2
+#define RF_CH_3 3
+#define RF_CH_4 4
+#define RF_CH_5 5
+#define RF_CH_6 6
+
+
+/*
+ * PIN definitions of RF_SETUP (0x06) register 
+ * (RF setup register)
+ */
+
+/*
+ * RF_DR_1:0 sets the air data rate
+ * 
+ * '00' = 1Mbps
+ * '01' = 2Mbps
+ * '10' = 250kbps
+ * '11' = Illegal
+ */
+#define RF_DR_0 3
+#define RF_DR_1 5
+
+/*
+ * RF_PWR_1:0 sets TX RF output power
+ * 
+ * '00' = -18dBM
+ * '01' = -12dBM
+ * '10' = -6dBM
+ * '11' =  0dBM
+ */
+#define RF_PWR_0 1
+#define RF_PWR_1 2
+
+
+/*
  *  The module uses a packet structure called Enhanced ShockBurst.
  *  This structure is broken down into 5 fields. 
  * 
@@ -163,38 +259,35 @@
  */
 namespace nRF24 {
 
-<<<<<<< HEAD
-    typedef union
-=======
 #define MISO_PIN    12
 #define MOSI_PIN    13
 #define SCK_PIN     14
 
 
-typedef union
-{
-    /* This is the frame that will be send over SPI */
-    uint64_t data_frame;
-    typedef struct
->>>>>>> c0cfa7b24b842898143d4c8d798dbf45387e565d
-    {
-        /* This is the frame that will be send over SPI */
-        uint64_t data_frame;
-        typedef struct
-        {
-            /* preable is 1 byte */
-            uint8_t preamble;
-            /* addresses can be 3-5 bytes wide, we can use 3 bytes */
-            uint32_t addr : 24;
-            /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
-            uint16_t packet_ctrl : 9;
-            /* we will use 2 bytes */
-            uint8_t byte1;
-            uint8_t byte2;
-            /* this byte is just padding */
-            uint8_t byte3 : 7;
-        } bits_t;
-    } packet_u;
+// union
+// {
+//     /* This is the frame that will be send over SPI */
+//     uint64_t data_frame;
+//     typedef struct
+//     {
+//         /* This is the frame that will be send over SPI */
+//         uint64_t data_frame;
+//         typedef struct
+//         {
+//             /* preable is 1 byte */
+//             uint8_t preamble;
+//             /* addresses can be 3-5 bytes wide, we can use 3 bytes */
+//             uint32_t addr : 24;
+//             /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
+//             uint16_t packet_ctrl : 9;
+//             /* we will use 2 bytes */
+//             uint8_t byte1;
+//             uint8_t byte2;
+//             /* this byte is just padding */
+//             uint8_t byte3 : 7;
+//         } bits_t;
+//     } packet_u;
+// };
 
     /*
     *  The following contains the registers of 
@@ -233,5 +326,5 @@ typedef union
         FEATURE         = 0x1D,
     };
 
-} // nRF24
+}; // nRF24
 #endif /* _NRF_24_ */

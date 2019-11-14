@@ -1,7 +1,7 @@
-#include <nRF24L01.h>
 #include <Arduino.h>
 #include <SPI.h>
 #include <stdint.h>
+#include <nRF24L01.h>
 
 
 /* 8MHZ */
@@ -25,6 +25,7 @@ void setup() {
 }
 
 void loop() {
+  Serial.println("test");
   // SPI.beginTransaction(SPISettings(SCK_FREQ_nRF24L01, MSBFIRST, SPI_MODE0));
   // digitalWrite(SS, LOW);
   
@@ -33,6 +34,6 @@ void loop() {
   // digitalWrite(SS, HIGH);
 }
 
-void ISR_Antenna() {
+// void ISR_Antenna() {
   // Serial.println("Hello World");
-}
+// }
