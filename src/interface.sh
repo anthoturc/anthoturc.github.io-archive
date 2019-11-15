@@ -16,6 +16,7 @@ done
 
 # find the difference between the two device printouts and search for relevant devices
 DEV_PORT=$( comm -23 tmp_curr_usb.txt tmp_prev_usb.txt | grep -E 'tty|cu' ) # tty for linux, cu for mac
-printf "\nConnected! $DEVICE_PATH$DEV_PORT"
+printf "\nConnected! $DEVICE_PATH$DEV_PORT\n-----------\n"
 rm tmp_curr_usb.txt tmp_prev_usb.txt
 
+python3 interface.py $DEVICE_PATH$DEV_PORT
