@@ -44,6 +44,12 @@
 #define FREQ(channel) (MIN_FREQ + (channel * MHz))
 
 /*
+ * Max SCK_FREQ for SPI communication.  Depends on board config
+ * so this number may be actually as high as 10MHz.
+ */
+#define SCK_FREQ 4e6ul
+
+/*
  *  Macros for the pins that are MCU will
  *  have access to. Not all of them will be used.
  *  They are mainly here to document the purpose 
