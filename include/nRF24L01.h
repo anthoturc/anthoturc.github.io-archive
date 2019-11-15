@@ -333,5 +333,22 @@ typedef union
         FEATURE         = 0x1D,
     };
 
+    enum commands
+    {
+        R_RX_PAYLOAD            = 0b01100001,
+        W_TX_PAYLOAD            = 0b10100000,
+        FLUSH_TX                = 0b11100001,
+        FLUSH_RX                = 0b11100010,
+        REUSE_TX_PL             = 0b11100011,
+        R_RX_PL_WID             = 0b01100000,
+        R_REGISTER              = 0b00000000,
+        W_REGISTER              = 0b00100000,
+        W_ACK_PAYLOAD           = 0b10101000,
+        W_TX_PAYLOAD_NO_ACK     = 0b10110000,
+        NOP                     = 0b11111111,    
+    };
+
+    void writeSPI()
+
 }; // nRF24
 #endif /* _NRF_24_ */
