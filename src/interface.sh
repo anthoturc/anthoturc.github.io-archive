@@ -20,3 +20,26 @@ printf "\nConnected! $DEVICE_PATH$DEV_PORT\n-----------\n"
 rm tmp_curr_usb.txt tmp_prev_usb.txt
 
 python3 interface.py $DEVICE_PATH$DEV_PORT
+
+# we use the while loop to allow users to transmit more than once
+file_path=""
+while [ "$file_path" != "q" ]; do
+	printf "\nCurrently Receiving...\nEnter absolute file path to send message or q to quit: \n"
+	read file_path
+
+	if [[ -e "$file_path" ]]; then
+
+		# if our file exits, we convert it to raw hex and send
+		raw_hex=$(xxd -p $file_path)
+		if [ "$file_path" != "q" ]; then
+			printf "\nCurrently Transmitting... Please wait..."
+			printf "\n$raw_hex"
+			# python3 send_hex.py $raw_hex
+			# want to check if interrupt was gennerated on pin...
+			printf "\nSent!\n"
+		fi
+	elif [ "$file_path" != "q" ]; then
+		printf "\nFile does not exist. Try again."
+	fi	
+done
+printf "\nGoodbye!\n"
