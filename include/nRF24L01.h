@@ -263,7 +263,7 @@
  *  TODO: Check the endianess of the Feather to make sure
  *  the order of the struct fields are correct
  */
-namespace nRF24 {
+namespace nRF24Module {
 
 /* Why are these defined twice? */
 // #define MISO_PIN    12
@@ -347,8 +347,15 @@ typedef union
         W_TX_PAYLOAD_NO_ACK     = 0b10110000,
         NOP                     = 0b11111111,    
     };
+    class nRF24 {
+    public:
+        nRF24(uint8_t cePin, uint8_t csnPin);
 
-    void writeSPI()
+        void readSPI(uint8_t numBytes);
 
-}; // nRF24
+    private:
+        uint8_t cePin_;
+        uint8_t csnPin_;
+    };
+}; // nRF24Module
 #endif /* _NRF_24_ */
