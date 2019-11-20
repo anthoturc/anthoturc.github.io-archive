@@ -16,6 +16,12 @@
 
 #include <stdint.h>
 
+/* 
+ * This is the maxiumum speed that we can communicate with the 
+ * chip, per the data sheet
+ */
+#define SPI_FRQ 10e6 
+
 /*
  *  These macros correspond to the min and max frequency that our 
  *  module is able to transmit/receive at.
@@ -355,11 +361,21 @@ typedef union
         W_TX_PAYLOAD_NO_ACK     = 0b10110000,
         NOP                     = 0b11111111,    
     };
+    
     class nRF24 {
     public:
         nRF24(uint8_t cePin, uint8_t csnPin);
 
-        void readSPI(uint8_t numBytes);
+        byte * readSPI(uint8_t addr);
+        byte * readRegister(uint8_t reg);
+        uint32_t readRXPayload();
+
+        void writeSPI(byte arr[], int size);   
+        void writeRegister(uint8_t addr);
+        void writeTXPayload(byte arr[], int size);
+
+        void flushTXPayload();
+        void flushRXPayload();
 
     private:
         uint8_t cePin_;

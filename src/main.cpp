@@ -1,7 +1,13 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <stdint.h>
-#include <nRF24L01.h>
+#include "nRF24L01.h"
+
+#define CE 26
+#define CSN 25
+
+/* create an instance of the radio */
+nRF24Module::nRF24 radio(CE, CSN);
 
 /* prototypes */
 void ISR_Antenna(void);
