@@ -5,6 +5,7 @@
 
 /* prototypes */
 void ISR_Antenna(void);
+void readConfig(void);
 void readInput(void);
 void printConfig(void);
 
@@ -14,26 +15,40 @@ volatile uint8_t input_channel = 0;
 volatile address input_address;
 volatile uint8_t * p_input_address;
 volatile bool is_config_printed = false;
+volatile uint8_t serial_flush_count = 0;
+volatile bool configured = false;
+
+volatile char stored;
 
 
 void setup() {
-  Serial.begin(115200);
   SPI.begin();
   p_input_address = input_address.bytes;
 
   /* Antenna is active low */
   pinMode(A2, PULLUP);
   attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
+  Serial.begin(115200);
 }
 
+int curr;
 void loop() {
   while ((sent_config_bytes != 5) && Serial.available()) {
-    readInput();
+    readConfig();
   }
+
   if ((sent_config_bytes == 5) && (!is_config_printed)) {
     printConfig();
     is_config_printed = true;
   }
+
+  while (configured && Serial.available()) {
+    stored = (char) (Serial.read());
+    if (stored == '\t') {
+      Serial.print("ready");
+    }
+  }
+  
 }
 
 
@@ -54,16 +69,35 @@ void ISR_Antenna() {
  * Also note that each transmission must end in a new line character.  This is how we
  * can differrentiate between the channel and address transmissions.
  */
-void readInput() {
-  uint8_t currByte = (uint8_t) (Serial.read());
+void readConfig() {
+  uint8_t currByte;
   
-  if (sent_config_bytes == 0) {
-    input_channel = currByte;
-  } else { // (sent_config_bytes < 5)
-    *p_input_address = currByte;
-    p_input_address++;
+  if (serial_flush_count == 5) {
+    Serial.println("here");
+    currByte = (uint8_t) (Serial.read());
+    if (sent_config_bytes == 0) {
+      input_channel = currByte;
+    } else { // (sent_config_bytes < 5)
+      *p_input_address = currByte;
+      p_input_address++;
+    }
+    sent_config_bytes++;   
+  } else {
+    while (true) {
+      currByte = (uint8_t) (Serial.read());
+      if (currByte == 9) {
+        serial_flush_count++;
+      } else {
+        serial_flush_count = 0;
+        break;
+      }
+
+      if (serial_flush_count == 5) {
+        configured = true;
+        break;
+      }
+    }
   }
-  sent_config_bytes++;   
 }
  
 
