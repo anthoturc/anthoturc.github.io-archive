@@ -3,6 +3,12 @@
 #include <stdint.h>
 #include "nRF24L01.h"
 
+
+#define CE 26
+#define CSN 25
+
+/* create an instance of the radio */
+nRF24Module::nRF24 radio(CE, CSN);
 #define FLUSH_CONST 9  // byte value we expect  when flushing Serial buffer
 #define FLUSH_COUNT 5  // number of sequential FLUSH_CONST needed to switch serial_state_e to READING
 #define CHANNEL_BYTES 1  // only 126 possible channels so use 1 byte
@@ -10,6 +16,7 @@
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
 #define BAUD_RATE 115200
 #define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
+
 
 /* prototypes */
 void ISR_Antenna(void);
