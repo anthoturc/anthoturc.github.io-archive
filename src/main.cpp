@@ -4,17 +4,20 @@
 #include "nRF24L01.h"
 
 #define FLUSH_CONST 9  // byte value we expect  when flushing Serial buffer
-#define FLUSH_COUNT 5  // number of sequential FLUSH_CONST needed to switch serial_state_e to ACTIVE
+#define FLUSH_COUNT 5  // number of sequential FLUSH_CONST needed to switch serial_state_e to READING
 #define CHANNEL_BYTES 1  // only 126 possible channels so use 1 byte
 #define ADDRESS_BYTES 4  // address width
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
+#define BAUD_RATE 115200
+#define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
 
 /* prototypes */
 void ISR_Antenna(void);
 void readConfig(void);
-void printConfig(void);
 void sendFile(void);
 void transmit(volatile char);
+void printConfig(void);
+void printExtension(void);
 
 /*
  * States signify whether the board is currently being configured or 
@@ -22,7 +25,7 @@ void transmit(volatile char);
  */
 typedef enum {
   CONFIG,
-  RUNNING
+  READY
 } board_state_e;
 
 /*
@@ -30,24 +33,24 @@ typedef enum {
  */
 typedef enum {
   FLUSHING,
-  ACTIVE
+  READING
 } serial_state_e;
 
 /* We are being configured until we have an address and channel */
-volatile board_state_e board_state = CONFIG;
-volatile serial_state_e serial_state = FLUSHING;
+volatile board_state_e board_state {CONFIG};
+volatile serial_state_e serial_state {FLUSHING};
 
 /* Communication configuration variables */
-volatile uint8_t sent_config_bytes = 0;  
-volatile uint8_t input_channel = 0;
+volatile uint8_t sent_config_bytes {0};  
+volatile uint8_t input_channel {0};
 volatile address input_address;
-volatile uint8_t * p_input_address = input_address.bytes;
-volatile bool is_config_printed = false;
-volatile uint8_t serial_flush_count = 0;
+volatile uint8_t * p_input_address {input_address.bytes};
+volatile bool is_config_printed {false};
+volatile uint8_t serial_flush_count {0};
 volatile char file_extension[EXTENSION_BYTES];
-volatile char * p_file_extension = file_extension;
-volatile bool fake_transmit = false;
-volatile uint8_t sent_transmit_bytes = 0; 
+volatile char * p_file_extension {file_extension};
+volatile bool fake_transmit {false};
+volatile uint8_t sent_transmit_bytes {0};
 
 void setup() {
   SPI.begin();
@@ -55,7 +58,7 @@ void setup() {
   /* Antenna is active low */
   pinMode(A2, PULLUP);
   attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
-  Serial.begin(115200);
+  Serial.begin(BAUD_RATE);
 }
 
 void loop() {
@@ -66,7 +69,7 @@ void loop() {
     }
     break;
   
-  case RUNNING:
+  case READY:
     if (!is_config_printed) {
       printConfig();
       is_config_printed = true;
@@ -75,8 +78,13 @@ void loop() {
     while (Serial.available()) {
       volatile char curr_char = (char) (Serial.read());
       if (!fake_transmit) {
-        if (curr_char == '\t') {
-          Serial.print("\t"); // now transmit
+
+        /*
+         * If the computer tells us it is ready, we respond to tell 
+         * it we are now ready to transmit.
+         */
+        if (curr_char == CONFIRMATION_CHAR) {
+          Serial.print(CONFIRMATION_CHAR); 
           fake_transmit = true;
           break;
         }
@@ -84,11 +92,11 @@ void loop() {
         transmit(curr_char);
       }
     }
-
     break;
   
+  /* We have to be in CONFIG or READY */
   default:
-    break; // have to be in CONFIG or RUNNING
+    break; 
   } 
 }
 
@@ -123,13 +131,13 @@ void readConfig() {
       }
 
       if (serial_flush_count == FLUSH_COUNT) {
-        serial_state = ACTIVE;
+        serial_state = READING;
         break;
       }
     }
     break;
   
-  case ACTIVE:
+  case READING:
     curr_byte = (uint8_t) (Serial.read());
     if (sent_config_bytes < CHANNEL_BYTES) {
       input_channel = curr_byte;
@@ -139,7 +147,7 @@ void readConfig() {
     } 
     
     if (sent_config_bytes == CHANNEL_BYTES + ADDRESS_BYTES - 1) {
-      board_state = RUNNING;
+      board_state = READY;
     }
     sent_config_bytes++; 
     break;
@@ -171,15 +179,13 @@ void transmit(volatile char curr_char) {
   } 
   
   if (sent_transmit_bytes == EXTENSION_BYTES-1) {
-    fake_transmit = false;
+    printExtension();
   }
+
   sent_transmit_bytes++; 
 }
 
 void sendFile() {
-  for (auto i {0}; i < EXTENSION_BYTES; ++i) {
-    Serial.print(file_extension[i]);
-  }
 }
  
 
@@ -192,4 +198,16 @@ void printConfig() {
   Serial.println(input_channel);
   Serial.print("Selected address: ");
   Serial.println(input_address.num);
+}
+
+/*
+ * Function printExtension() Prints the extension of the to-be-transmitted file.
+ * More for debugging purposes.
+ */
+void printExtension() {
+    Serial.print("File extension: ");
+    for (auto i {0}; i < EXTENSION_BYTES; ++i) {
+      Serial.print(file_extension[i]);
+    }
+    Serial.println();
 }
