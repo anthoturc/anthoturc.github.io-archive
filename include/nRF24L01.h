@@ -370,10 +370,12 @@ namespace nRF24Module {
         void readSPI(byte * arr, uint32_t size);
 
         void writeSPI(byte * arr, uint32_t size);   
-        
+
         void flushTXPayload();
         void flushRXPayload();
 
+        void setToReceiver();
+        void setToTransmitter();
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
