@@ -86,6 +86,7 @@ void loop() {
         if (curr_char == CONFIRMATION_CHAR) {
           Serial.print(CONFIRMATION_CHAR); 
           fake_transmit = true;
+          sleep(1); // so that both computer and Arduino not listening at same time
           break;
         }
       } else {
