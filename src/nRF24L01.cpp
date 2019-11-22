@@ -33,7 +33,6 @@ nRF24::readSPI(uint8_t addr)
     // create the frame to send over 
 
     // get the response back
-byte *
     SPI.endTransaction();
     digitalWrite(csnPin_, HIGH);
 
@@ -41,13 +40,19 @@ byte *
 }
 
 void
-nRF24::writeSPI(byte arr[], int size)
+nRF24::writeSPI(byte * arr, uint32_t size)
 {
     SPI.beginTransaction(SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0));
     digitalWrite(csnPin_, LOW);
-
+    
+    
     // create the frame to send over
+    for (int i = 0; i < size; ++i) {
+        data_frame_u frame = makeFrame(arr[i]); 
+        SPI.transfer(frame.data_frame);
+    }
 
+    SPI.transferBytes(makeDataFrame(), );    
     // get the response back 
 
     SPI.endTransaction();

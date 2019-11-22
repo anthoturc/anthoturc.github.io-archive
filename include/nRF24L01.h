@@ -284,30 +284,21 @@ namespace nRF24Module {
 // #define MOSI_PIN    13
 // #define SCK_PIN     14
 
+typedef struct
+{
+    /* data to be sent */
+    uint8_t data;
+    /* preable is 1 byte */
+    uint8_t preamble;
+} bits_t;
+
 
 typedef union
 {
     /* This is the frame that will be send over SPI */
-    uint64_t data_frame;
-    typedef struct
-    {
-        /* This is the frame that will be send over SPI */
-        uint64_t data_frame;
-        typedef struct
-        {
-            /* preable is 1 byte */
-            uint8_t preamble;
-            /* addresses can be 3-5 bytes wide, we can use 3 bytes */
-            uint32_t addr : 24;
-            /* payload length is 6 bits, packet id is 2 bits, no ack is 1 bit */
-            uint16_t packet_ctrl : 9;
-            /* we will use 2 bytes */
-            uint8_t byte1;
-            uint8_t byte2;
-            /* this byte is just padding */
-            uint8_t byte3 : 7;
-        } bits_t;
-    } packet_u;
+    uint16_t data_frame;
+    /* This is the frame that will be send over SPI */
+    bits_t atomic_frame;    
 } data_frame_u;
 
     /*
@@ -370,7 +361,7 @@ typedef union
         byte * readRegister(uint8_t reg);
         uint32_t readRXPayload();
 
-        void writeSPI(byte arr[], int size);   
+        void writeSPI(byte * arr, uint32_t size);   
         void writeRegister(uint8_t addr);
         void writeTXPayload(byte arr[], int size);
 
@@ -380,6 +371,8 @@ typedef union
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
+
+        data_frame_u makeFrame(byte data);
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
