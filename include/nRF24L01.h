@@ -172,6 +172,16 @@ typedef union {
  */
 #define MASK_RX_DR 6
 
+/*
+ * The size of each FIFO (for TX and RX) in bytes
+ */
+#define FIFO_SZ 32
+
+/*
+ * Macro for no bytes to be sent. This serves as "padding"
+ * for making the data frame
+ */
+#define NO_DATA 0x00
 
 /*
  * PIN definitions of SETUP_AW (0x03) register 
@@ -284,22 +294,22 @@ namespace nRF24Module {
 // #define MOSI_PIN    13
 // #define SCK_PIN     14
 
-typedef struct
-{
-    /* data to be sent */
-    uint8_t data;
-    /* preable is 1 byte */
-    uint8_t preamble;
-} bits_t;
+    typedef struct
+    {
+        /* data to be sent */
+        uint8_t data;
+        /* preable is 1 byte */
+        uint8_t preamble;
+    } bits_t;
 
 
-typedef union
-{
-    /* This is the frame that will be send over SPI */
-    uint16_t data_frame;
-    /* This is the frame that will be send over SPI */
-    bits_t atomic_frame;    
-} data_frame_u;
+    typedef union
+    {
+        /* This is the frame that will be send over SPI */
+        uint16_t data_frame;
+        /* This is the frame that will be send over SPI */
+        bits_t atomic_frame;    
+    } data_frame_u;
 
     /*
     *  The following contains the registers of 
@@ -357,14 +367,10 @@ typedef union
     public:
         nRF24(uint8_t cePin, uint8_t csnPin);
 
-        byte * readSPI(uint8_t addr);
-        byte * readRegister(uint8_t reg);
-        uint32_t readRXPayload();
+        void readSPI(byte * arr, uint32_t size);
 
         void writeSPI(byte * arr, uint32_t size);   
-        void writeRegister(uint8_t addr);
-        void writeTXPayload(byte arr[], int size);
-
+        
         void flushTXPayload();
         void flushRXPayload();
 
@@ -372,7 +378,7 @@ typedef union
         uint8_t cePin_;
         uint8_t csnPin_;
 
-        data_frame_u makeFrame(byte data);
+        data_frame_u makeFrame(commands cmd, byte data);
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
