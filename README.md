@@ -8,10 +8,10 @@ CRCO = 0 so CRC follows a 1-byte encoding scheme\
 MASK_MAX_RT = 1 to mask interrupt caused by max amount of repeaed transmits
 
 ### SETUP_AW
-AW_1:0 = 01 sets the address widths to 3 for the data pipes 
+AW_1:0 = 10 sets the address widths to 4 bytes for the data pipes 
 
 ### SETUP_RETR
-ARD_3:0 = 1111 so autoretransmissions occur every 4000 microseconds\
+ARD_3:0 = 0011 so autoretransmissions occur every 1000 microseconds\
 ARC_3:0 = 1111 so up to 15 retransmits allowed\
 
 ### RF_CH
