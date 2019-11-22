@@ -73,16 +73,16 @@ if __name__ == "__main__":
 
     # first we tell the Arduino to switch to transmit state
     ser.write(transmit_byte)
+    config_string = ""
 
     # then we wait until we get confirmation from the Arduino that it is transmitting
     while True:
-        config_string = ""
         while ser.in_waiting:
-            config_string += ser.read(1).decode("utf-8")
+            config_string = ser.read(1).decode("utf-8")
             if config_string == CONFIRMATION_CHAR:
                 break
 
-        if config_string == CONFIRMATION_CHAR:
+        if config_string and config_string == CONFIRMATION_CHAR:
             break
 
     # now we are ready to send over the extension and its contents one byte at a time
