@@ -20,8 +20,9 @@ DEV_PORT=$( comm -23 /tmp/curr_usb.txt /tmp/prev_usb.txt | grep -E 'tty|cu' ) # 
 printf "\nConnected! $DEVICE_PATH$DEV_PORT\n-----------\n"
 rm /tmp/curr_usb.txt /tmp/prev_usb.txt
 
-python3 config.py $DEVICE_PATH$DEV_PORT $BAUD_RATE
+python3 ./scripts/config.py $DEVICE_PATH$DEV_PORT $BAUD_RATE
 
+mkdir ./logs/
 # we use the while loop to allow users to transmit more than once
 file_path=""
 while [ "$file_path" != "q" ]; do
@@ -34,7 +35,7 @@ while [ "$file_path" != "q" ]; do
 		raw_hex=$(xxd -p $file_path)
 		if [ "$file_path" != "q" ]; then
 			printf "\nCurrently Transmitting... Please wait..."
-			python3 send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" 
+			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
 			# want to check if interrupt was gennerated on pin...
 			printf "\nSent!\n"
 		fi
