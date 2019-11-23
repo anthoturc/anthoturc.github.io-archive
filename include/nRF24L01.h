@@ -278,7 +278,8 @@
 
 #define SPI_SETTINGS SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0)
 
-#define ADDRESS_WIDTH 0b00000001
+#define ADDRESS_WIDTH_CONFIG 0b00000001
+#define ADDRESS_WIDTH 3
 
 /*
  *  The module uses a packet structure called Enhanced ShockBurst.
