@@ -388,7 +388,7 @@ namespace nRF24Module {
         void setDataRate();
 
         data_frame_u makeFrame(uint8_t cmd, byte data);
-        void writeConfiguration(uint8_t cmd, uint8_t data)
+        void writeConfiguration(uint8_t cmd, uint8_t data);
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
