@@ -53,8 +53,6 @@ public:
   void receive(void);
   void handShake(void);
   void transmit(void);
-  void printConfig(void);
-  bool isConfigPrinted(void);
   void printExtension(void);
 
   bool is_config_printed {false};

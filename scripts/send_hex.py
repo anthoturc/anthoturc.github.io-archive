@@ -64,7 +64,7 @@ def handshake(ser):
     config_string = ""
 
     start_time = time.time()
-
+    time.sleep(1)
     # wait until we get confirmation from the Arduino
     while True:
         while ser.in_waiting:
@@ -94,10 +94,8 @@ if __name__ == "__main__":
     # configuring our serial
     ser = serial.Serial()
     ser.port = sys.argv[1]
-    ser.baudrate = sys.argv[2]
+    ser.baudrate = int(sys.argv[2])
     ser.open()
-    
-    print(sys.argv) # for debugging communication
     
     # Translation:
     #   1) .split('.')[1] means take everything after the . of our file path
@@ -118,6 +116,20 @@ if __name__ == "__main__":
 
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)
+
+    # for debugging communication
+    ext = ""
+    time.sleep(1)
+    while True:
+        while ser.in_waiting:
+            curr = ser.read(1).decode("utf-8")
+            
+            if curr ==  HANDSHAKE_CHAR:
+                print(ext)            
+                ext = ""
+            else:
+                ext += curr
+
     # ser.write(raw_hex_bytes)
     
     ser.close()

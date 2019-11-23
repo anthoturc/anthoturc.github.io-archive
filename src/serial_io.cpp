@@ -141,6 +141,9 @@ SerialIO::transmit()
     }
   }
 
+  while (true) {
+  }
+
   sendFile();
 }
 
@@ -156,32 +159,6 @@ SerialIO::sendFile()
 {
 }
 
-
- /*
-  * Function printConfig() Prints the user input settings once configured. 
-  * More for debugging purposes.
-  */
-void 
-SerialIO::printConfig() 
-{
-  Serial.print("Selected channel: ");
-  Serial.println(input_channel);
-  Serial.print("Selected address: ");
-  Serial.println(input_address.num);
-  is_config_printed = true;
-}
-
-
-/*
- * Getter for is_config_printed
- */
-bool
-SerialIO::isConfigPrinted() 
-{
-  return is_config_printed;
-}
-
-
 /*
  * Function printExtension() Prints the extension of the to-be-transmitted file.
  * More for debugging purposes.
@@ -189,9 +166,12 @@ SerialIO::isConfigPrinted()
 void 
 SerialIO::printExtension() 
 {
-    Serial.print("File extension: ");
-    for (auto i {0}; i < EXTENSION_BYTES; ++i) {
-      Serial.print(file_extension[i]);
-    }
-    Serial.println();
+  Serial.print(input_channel);
+  Serial.print(CONFIRMATION_CHAR);
+  Serial.print(input_address.num);
+  Serial.print(CONFIRMATION_CHAR);
+  for (auto i {0}; i < EXTENSION_BYTES; ++i) {
+    Serial.print(file_extension[i]);
+  }
+  Serial.print(CONFIRMATION_CHAR);
 }

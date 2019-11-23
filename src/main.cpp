@@ -35,9 +35,6 @@ void loop() {
     break;
   
   case READY:
-    if (!io.isConfigPrinted()) {
-      io.printConfig();
-    }
 
     if (!transmitting) {
       io.receive();
