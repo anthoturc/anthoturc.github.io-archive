@@ -50,14 +50,6 @@
 #define FREQ(channel) (MIN_FREQ + (channel * MHz))
 
 /*
- * user input data pipe address
- */
-typedef union {
-  uint32_t num;
-  uint8_t bytes[4];
-} address;
-
-/*
  * Max SCK_FREQ for SPI communication.  Depends on board config
  * so this number may be actually as high as 10MHz.
  */
