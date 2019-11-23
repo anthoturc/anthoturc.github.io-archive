@@ -13,14 +13,14 @@ SerialIO::getBoardState()
 
 
 /*
- * Function readConfig reads data sent over serial to configure the desired channel
+ * Function setConfig reads data sent over serial to configure the desired channel
  * and address settings for transmission.
  * 
  * Note that channel must be sent first over transmission, then address.  This is taken
  * into account in config.py script.
  */
 void 
-SerialIO::readConfig() 
+SerialIO::setConfig() 
 {
   uint8_t curr_byte;
   
@@ -99,62 +99,46 @@ SerialIO::handShake()
 
 
 /*
- * Function receive() takes care of RX functionality and breaks if we are to switch
- * to TX state.
+ * Function sendFile() sends received file to serial
  */
 void
-SerialIO::receive()
+SerialIO::sendFile()
 {
-  // TODO: READING TRANSMISSION
+  // TODO: everything
 }
 
 
 /*
- * Function transmit reads data sent over serial to configure the desired file
+ * Function setExtension() reads data sent over serial to configure the desired file
  * extension so we can decode our sent hex file.
- * 
- * Note that the extension must be sent first over transmission, then the data.  
- * This is taken into account in send_hex.py script.
- * 
- */
-void 
-SerialIO::transmit() 
-{
-  handShake();
-  sendExtension();
-  handShake();
-  sendFile();
-}
-
-/*
- *
  */
 void
-SerialIO::sendExtension()
+SerialIO::setExtension()
 {
   char curr_char;
+  handShake();
 
   /* first, collect our file extension */
   while (true) {
     while (Serial.available()) {
       curr_char = (char) (Serial.read());
-      if (sent_transmit_bytes < EXTENSION_BYTES) {
+      if (n_setter_bytes < EXTENSION_BYTES) {
         *p_file_extension = curr_char;
         p_file_extension++;
       } 
       
-      if (sent_transmit_bytes == EXTENSION_BYTES-1) {
+      if (n_setter_bytes == EXTENSION_BYTES-1) {
         printConfig(); // for debugging
         break;
       }
 
-      sent_transmit_bytes++;
+      n_setter_bytes++;
     }
   }
 }
 
 /*
- * 
+ * Getter for file extension, set after setTransmission() is run
  */
 char *
 SerialIO::getExtension()
@@ -162,16 +146,35 @@ SerialIO::getExtension()
   return file_extension;
 }
 
+/*
+ * Getter for address, set after setTransmission() is run
+ */
+uint8_t * 
+SerialIO::getAddress(void) 
+{
+  return input_address.bytes;
+}
 
 /*
- * Function sendFile() sends hex from the Arduino to the transmitter in chunks of 16 bytes.
- * Afterwards, we call handshake() so that the computer knows to send the next 16 bytes.  
+ * Getter for channel, set after setTransmission() is run
+ */
+uint8_t 
+SerialIO::getChannel(void) 
+{
+  return input_channel;
+}
+
+
+/*
+ * Function setFileHexChunk() gets the raw hex of our file from the computer in chunks of 80k bytes.
+ * Afterwards, we call handshake() so that the computer knows to send the next 80k bytes.  
  * This transmission is done in chunks because we may not be able to fit our entire file 
  * to send in memory at once.
  */
 void 
-SerialIO::sendFile() 
+SerialIO::setFileHexChunk() 
 {
+  handShake();
 }
 
 /*

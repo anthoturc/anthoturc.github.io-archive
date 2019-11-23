@@ -30,18 +30,20 @@ void loop() {
   switch (io.getBoardState()) {
   case CONFIG:
     while (Serial.available()) {
-      io.readConfig();
+      io.setConfig();
     }
     break;
   
   case READY:
 
     if (!transmitting) {
-      io.receive();
+      io.sendFile();
       transmitting = true;
     } else {
-      io.transmit();
+      io.setExtension();
       io.getExtension();
+      io.getAddress();
+      io.getChannel();
       transmitting = false;
     }
     break;
