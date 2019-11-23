@@ -290,12 +290,6 @@
  *  the order of the struct fields are correct
  */
 namespace nRF24Module {
-
-/* Why are these defined twice? */
-// #define MISO_PIN    12
-// #define MOSI_PIN    13
-// #define SCK_PIN     14
-
     typedef struct
     {
         /* data to be sent */

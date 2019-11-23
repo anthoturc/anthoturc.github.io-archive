@@ -14,6 +14,8 @@
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
 #define BAUD_RATE 115200
 #define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
+#define MAX_FILE_CHUNK_BYTES 80000 // max amount of bytes to be sent by the computer at once
+
 
 /*
  * user input data pipe address
@@ -23,15 +25,17 @@ typedef union {
   uint8_t bytes[4];
 } address;
 
+
 /*
  * States signify whether the board is currently being configured or 
- * has been configures and is now running.
+ * has been configured and is now ready to send and receive files.
  */
 typedef enum 
 {
   CONFIG,
   READY
 } board_state_e;
+
 
 /*
  * States signify whether the serial is active or not (being flushed)
@@ -42,38 +46,63 @@ typedef enum
   READING
 } serial_state_e;
 
+
 class SerialIO
 {
 public:
   SerialIO();
 
-  board_state_e getBoardState();
-  void readConfig(void);
-  void receive(void);
   void handShake(void);
-  void transmit(void);
-  void sendExtension(void);
   void sendFile(void);
-  void printConfig(void);
+
+  /* Setters */
+  void setConfig(void);
+  void setExtension(void);
+  void setFileHexChunk(void);
+
+  /* Getters */
+  board_state_e getBoardState();
   char * getExtension(void);
+  uint8_t * getAddress(void);
+  uint8_t getChannel(void);
 
 private:
+  void printConfig(void);  // for debugging
+
   board_state_e board_state {CONFIG};
   serial_state_e serial_state {FLUSHING};
 
-  /* Communication configuration variables */
-  uint8_t sent_config_bytes {0}; 
 
+  /* -----communication configuration variables----- */
+  /* 
+   * keeps track of how many config bytes sent so we know
+   * if the curr byte should be included in the address var
+   * or the channel var
+   */
+  uint8_t sent_config_bytes {0};
   uint8_t input_channel {0};
   address input_address;
   uint8_t * p_input_address {input_address.bytes};
 
+  /* 
+   * keeps track of how many consecutive FLUSH_CONST we
+   * receive in a row, so we know when to start reading from
+   * the serial.
+   */
   uint8_t serial_flush_count {0};
 
+
+  /* -----file configuration variables----- */
   char file_extension[EXTENSION_BYTES];
   char * p_file_extension {file_extension};
-
-  uint8_t sent_transmit_bytes {0};
+  byte file_chunk[MAX_FILE_CHUNK_BYTES];
+  
+  /*
+   * Keep track of the file size, including extension
+   * so that we can perform a checksum after comunication
+   * (feature not implemented yet)
+   */
+  uint8_t n_setter_bytes {0};
 };
 
 #endif /* _SERIAL_IO_H_ */
