@@ -49,13 +49,13 @@ public:
 
   board_state_e getBoardState();
   void readConfig(void);
-  void sendFile(void);
   void receive(void);
   void handShake(void);
   void transmit(void);
-  void printExtension(void);
-
-  bool is_config_printed {false};
+  void sendExtension(void);
+  void sendFile(void);
+  void printConfig(void);
+  char * getExtension(void);
 
 private:
   board_state_e board_state {CONFIG};
