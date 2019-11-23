@@ -86,8 +86,54 @@ nRF24::setReadingPipeAddr(uint8_t pipe, uint8_t * address)
 {
     /* pipe must be in range [0, N_PIPES] */
     if (pipe > N_PIPES || pipe < 0) return;
+
+    SPI.beginTransaction(SPI_SETTINGS);
+    digitalWrite(csnPin_, LOW);
     
-    writeConfiguration(W_REGISTER | EN_RXADDR, pipe);
+    byte data = W_REGISTER;
+    byte payloadWidth = W_REGISTER;
+    switch (pipe) {
+        case 0:
+            data |= RX_ADDR_P0;
+            payloadWidth |= RX_PW_P0;
+            break;
+        case 1:
+            data |= RX_ADDR_P1;
+            payloadWidth |= RX_PW_P1;
+            break;
+        case 2:
+            data |= RX_ADDR_P2;
+            payloadWidth |= RX_PW_P2;
+            break;
+        case 3:
+            data |= RX_ADDR_P3;
+            payloadWidth |= RX_PW_P3;
+            break;
+        case 4:
+            data |= RX_ADDR_P4;
+            payloadWidth |= RX_ADDR_P4;
+            break;
+        case 5:
+            data |= RX_ADDR_P5;
+            payloadWidth |= RX_ADDR_P5;
+            break;
+        default:
+            break;
+    }
+    data_frame_u df = makeFrame(data, NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+    for (int i = 0; i < ADDRESS_WIDTH; ++i) {
+        SPI.transfer(address[i]);
+    }
+
+    SPI.endTransaction();
+    digitalWrite(csnPin_, HIGH);
+    
+    delay(100);    
+
+    /* set the payload width to be 32 bits */
+    data = 0b00010000;    
+    writeConfiguration(payloadWidth, data);
 }
 
 void 
@@ -104,6 +150,8 @@ nRF24::setListeningAddr(uint8_t * address)
 
     SPI.endTransaction();
     digitalWrite(csnPin_, HIGH);
+    
+    setReadingPipeAddr(0, address);
 }
 
 data_frame_u
@@ -133,7 +181,7 @@ void
 nRF24::setAddressWidth()
 {
     /* only allow ADDRESS_WIDTH bytes to be sent over */
-    writeConfiguration(W_REGISTER | SETUP_AW, ADDRESS_WIDTH);
+    writeConfiguration(W_REGISTER | SETUP_AW, ADDRESS_WIDTH_CONFIG);
 }
 
 void 
