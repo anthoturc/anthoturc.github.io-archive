@@ -8,12 +8,13 @@
 using namespace nRF24Module;
 
 nRF24::nRF24(uint8_t cePin, uint8_t csnPin) 
-    : cePin_(cePin), csnPin_(csnPin) 
+    : cePin_(cePin), csnPin_(csnPin), txMode_(false)
 {
     SPI.begin();
     pinMode(cePin_, OUTPUT);
     pinMode(csnPin_, OUTPUT);
 
+    setAddressWidth();
     /* radio should be reciever by default */
     setToReceiver();
 }
@@ -21,33 +22,19 @@ nRF24::nRF24(uint8_t cePin, uint8_t csnPin)
 void
 nRF24::setToReceiver()
 {
-    pinMode(cePin_, HIGH);
-    SPI.beginTransaction(SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0));
-    digitalWrite(csnPin_, LOW);
-    
+    pinMode(cePin_, LOW);
     /* per the data sheet put the chip in power up mode */
-    byte configuration = 0b00001011;
-    data_frame_u df = makeFrame(W_REGISTER, configuration);
-    
-    SPI.transfer16(df.data_frame);
-    digitalWrite(csnPin_, HIGH);
+    byte data = 0b00001011;
+    writeConfiguration(W_REGISTER | CONFIG, data);
 }
 
 void 
 nRF24::setToTransmitter()
 {
     pinMode(cePin_, HIGH);
-    SPI.beginTransaction(SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0));
-    digitalWrite(csnPin_, LOW);
-    
     /* per the data sheet put the chip in power up mode */
-    byte configuration = 0b00001010; 
-    data_frame_u df = makeFrame(W_REGISTER, configuration);
-    
-    SPI.transfer16(df.data_frame);
-
-    SPI.endTransaction();
-    digitalWrite(csnPin_, HIGH);
+    byte data = 0b00001010; 
+    writeConfiguration(W_REGISTER | CONFIG, data);
 }
 
 
@@ -55,16 +42,15 @@ nRF24::setToTransmitter()
 void
 nRF24::readSPI(byte * arr, uint32_t size)
 {
-    SPI.beginTransaction(SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0));
+    SPI.beginTransaction(SPI_SETTINGS);
     digitalWrite(csnPin_, LOW);
 
     data_frame_u df = makeFrame(R_RX_PAYLOAD, NO_DATA);
-    
+    SPI.transfer(df.atomic_frame.preamble);
     // create the frame to send over 
-    for (int i = 0; i < size/2; i+=2) {
-        uint16_t recv = SPI.transfer16(df.data_frame);
-        arr[i] = (recv << 8) >> 8;
-        arr[i+1] = recv >> 8;
+    for (int i = 0; i < size; ++i) {
+        uint8_t recv = SPI.transfer(NO_DATA);
+        arr[i] = recv;
     }
 
     // get the response back
@@ -75,12 +61,45 @@ nRF24::readSPI(byte * arr, uint32_t size)
 void
 nRF24::writeSPI(byte * arr, uint32_t size)
 {
-    SPI.beginTransaction(SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0));
+    SPI.beginTransaction(SPI_SETTINGS);
     digitalWrite(csnPin_, LOW);
     
+    data_frame_u df = makeFrame(W_TX_PAYLOAD, NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
     for (int i = 0; i < size; ++i) {
-        data_frame_u frame = makeFrame(W_TX_PAYLOAD, arr[i]); 
-        SPI.transfer16(frame.data_frame);
+        SPI.transfer(arr[i]);
+    }
+    SPI.endTransaction();
+    digitalWrite(csnPin_, HIGH);
+}
+
+void 
+nRF24::setChannel(uint8_t channel)
+{
+    if (channel > NUM_CHANNELS || channel < 0) return;
+
+    writeConfiguration(W_REGISTER | RF_CH, channel);
+}
+
+void 
+nRF24::setReadingPipeAddr(uint8_t pipe, uint8_t * address)
+{
+    /* pipe must be in range [0, N_PIPES] */
+    if (pipe > N_PIPES || pipe < 0) return;
+    
+    writeConfiguration(W_REGISTER | EN_RXADDR, pipe);
+}
+
+void 
+nRF24::setListeningAddr(uint8_t * address)
+{
+    SPI.beginTransaction(SPI_SETTINGS);
+    digitalWrite(csnPin_, LOW);
+
+    data_frame_u df = makeFrame(W_REGISTER | TX_ADDR, NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+    for (int i = 0; i < ADDRESS_WIDTH; ++i) {
+        SPI.transfer(address[i]);
     }
 
     SPI.endTransaction();
@@ -88,7 +107,7 @@ nRF24::writeSPI(byte * arr, uint32_t size)
 }
 
 data_frame_u
-nRF24::makeFrame(commands cmd, byte data)
+nRF24::makeFrame(uint8_t cmd, byte data)
 {
     data_frame_u df;
     df.atomic_frame.preamble = cmd;
@@ -108,4 +127,33 @@ nRF24::flushRXPayload()
 {
     byte data[1] = { FLUSH_RX };
     writeSPI((byte *)data, 1);
+}
+
+void 
+nRF24::setAddressWidth()
+{
+    /* only allow ADDRESS_WIDTH bytes to be sent over */
+    writeConfiguration(W_REGISTER | SETUP_AW, ADDRESS_WIDTH);
+}
+
+void 
+nRF24::setDataRate()
+{
+    /* set RF to 250kbps and -18dBm */
+    byte data = 0b00100000;
+    writeConfiguration(W_REGISTER | RF_SETUP, data);
+}
+
+void 
+nRF24::writeConfiguration(uint8_t cmd, uint8_t data)
+{
+    SPI.beginTransaction(SPI_SETTINGS);
+    digitalWrite(csnPin_, LOW);
+
+    data_frame_u df = makeFrame(cmd, data);
+
+    SPI.transfer16(df.data_frame);
+    SPI.endTransaction();
+
+    digitalWrite(csnPin_, LOW);
 }

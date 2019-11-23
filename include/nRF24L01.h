@@ -42,6 +42,13 @@
  */
 #define NUM_CHANNELS 125
 
+
+/*
+ *  A pipe is a logical channel in the physical RF channel. Each one has
+ *  its own unique address. There are 6 piptes total, numbered 0-5.
+ */
+#define N_PIPES 5
+
 /*
  *  This macro will determine the frequency at a specified channel.
  *  Since there are 125 channels, we can add the channel to the min
@@ -269,6 +276,9 @@
 #define RF_PWR_0 1
 #define RF_PWR_1 2
 
+#define SPI_SETTINGS SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0)
+
+#define ADDRESS_WIDTH 0b00000001
 
 /*
  *  The module uses a packet structure called Enhanced ShockBurst.
@@ -355,7 +365,8 @@ namespace nRF24Module {
         NOP                     = 0b11111111,    
     };
     
-    class nRF24 {
+    class nRF24 
+    {
     public:
         nRF24(uint8_t cePin, uint8_t csnPin);
 
@@ -368,11 +379,21 @@ namespace nRF24Module {
 
         void setToReceiver();
         void setToTransmitter();
+
+        void setChannel(uint8_t channel);
+        void setReadingPipeAddr(uint8_t pipe, uint8_t * address);
+        void setListeningAddr(uint8_t * address);
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
+        
+        bool txMode_;
 
-        data_frame_u makeFrame(commands cmd, byte data);
+        void setAddressWidth();
+        void setDataRate();
+
+        data_frame_u makeFrame(uint8_t cmd, byte data);
+        void writeConfiguration(uint8_t cmd, uint8_t data)
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
