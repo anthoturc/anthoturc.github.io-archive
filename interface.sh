@@ -39,7 +39,8 @@ while [ "$file_path" != "q" ]; do
 		raw_hex=$(xxd -p $file_path)
 		if [ "$file_path" != "q" ]; then
 			printf "\nCurrently Transmitting... Please wait..."
-			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
+			# python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
+			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex"
 			# want to check if interrupt was gennerated on pin...
 			printf "\nSent!\n"
 		fi

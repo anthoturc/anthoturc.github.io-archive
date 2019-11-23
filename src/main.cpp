@@ -32,6 +32,7 @@ void loop() {
     while (Serial.available()) {
       io.setConfig();
     }
+
     break;
   
   case READY:
@@ -41,9 +42,31 @@ void loop() {
       transmitting = true;
     } else {
       io.setExtension();
-      io.getExtension();
-      io.getAddress();
-      io.getChannel();
+      char * ext = io.getExtension();
+      uint8_t * addr = io.getAddress();
+      uint8_t channel = io.getChannel();
+
+      radio.setToTransmitter();
+      radio.setListeningAddr(addr);
+      radio.setChannel(channel);
+      delay(1000);
+      io.print(radio.getChannel());
+
+      delay(1000);
+      io.print(radio.getChannel());
+
+      delay(1000);
+      io.print(radio.getChannel());
+
+      delay(1000);
+      io.print(radio.getChannel());
+
+      delay(1000);
+      io.print(radio.getChannel());
+
+      while (true) {
+        radio.writeSPI((byte *)ext, EXTENSION_BYTES);
+      }
       transmitting = false;
     }
     break;

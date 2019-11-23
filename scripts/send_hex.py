@@ -126,14 +126,14 @@ if __name__ == "__main__":
             
             if curr ==  HANDSHAKE_CHAR:
                 print(ext)
-                if ext[0] not in set([str(x) for x in range(10)]):
-                    break            
+                # if ext[0] not in set([str(x) for x in range(10)]):
+                #     break            
                 ext = ""
             else:
                 ext += curr
         
-        if ext[0] not in set([str(x) for x in range(10)]):
-            break            
+        # if ext[0] not in set([str(x) for x in range(10)]):
+        #     break            
 
     time.sleep(1)
     handshake(ser)

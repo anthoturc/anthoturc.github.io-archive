@@ -119,7 +119,7 @@ SerialIO::setExtension()
   handShake();
 
   /* first, collect our file extension */
-  while (true) {
+  while (n_setter_bytes != EXTENSION_BYTES-1) {
     while (Serial.available()) {
       curr_char = (char) (Serial.read());
       if (n_setter_bytes < EXTENSION_BYTES) {
@@ -191,5 +191,16 @@ SerialIO::printConfig()
   for (auto i {0}; i < EXTENSION_BYTES; ++i) {
     Serial.print(file_extension[i]);
   }
+  Serial.print(CONFIRMATION_CHAR);
+}
+
+/*
+ * Function printExtension() Prints the extension of the to-be-transmitted file.
+ * More for debugging purposes.
+ */
+void 
+SerialIO::print(uint8_t data) 
+{
+  Serial.print(data);
   Serial.print(CONFIRMATION_CHAR);
 }

@@ -54,6 +54,7 @@ public:
 
   void handShake(void);
   void sendFile(void);
+  void print(uint8_t);
 
   /* Setters */
   void setConfig(void);
