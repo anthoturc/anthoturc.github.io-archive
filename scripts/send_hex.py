@@ -125,11 +125,22 @@ if __name__ == "__main__":
             curr = ser.read(1).decode("utf-8")
             
             if curr ==  HANDSHAKE_CHAR:
-                print(ext)            
+                print(ext)
+                if ext[0] not in set([str(x) for x in range(10)]):
+                    break            
                 ext = ""
             else:
                 ext += curr
+        
+        if ext[0] not in set([str(x) for x in range(10)]):
+            break            
 
+    time.sleep(1)
+    handshake(ser)
+    
+    # send 80000 bytes at a time = 80000 transmissions
+    
+    print(len(raw_hex_bytes))
     # ser.write(raw_hex_bytes)
     
     ser.close()

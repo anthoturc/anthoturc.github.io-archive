@@ -105,7 +105,6 @@ SerialIO::handShake()
 void
 SerialIO::receive()
 {
-  handShake();
   // TODO: READING TRANSMISSION
 }
 
@@ -121,6 +120,18 @@ SerialIO::receive()
 void 
 SerialIO::transmit() 
 {
+  handShake();
+  sendExtension();
+  handShake();
+  sendFile();
+}
+
+/*
+ *
+ */
+void
+SerialIO::sendExtension()
+{
   char curr_char;
 
   /* first, collect our file extension */
@@ -133,18 +144,22 @@ SerialIO::transmit()
       } 
       
       if (sent_transmit_bytes == EXTENSION_BYTES-1) {
-        printExtension();
+        printConfig(); // for debugging
         break;
       }
 
       sent_transmit_bytes++;
     }
   }
+}
 
-  while (true) {
-  }
-
-  sendFile();
+/*
+ * 
+ */
+char *
+SerialIO::getExtension()
+{
+  return file_extension;
 }
 
 
@@ -164,7 +179,7 @@ SerialIO::sendFile()
  * More for debugging purposes.
  */
 void 
-SerialIO::printExtension() 
+SerialIO::printConfig() 
 {
   Serial.print(input_channel);
   Serial.print(CONFIRMATION_CHAR);

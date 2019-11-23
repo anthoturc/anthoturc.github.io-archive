@@ -2,6 +2,7 @@
 
 DEVICE_PATH="/dev/"
 BAUD_RATE=115200
+LOG_PATH="./logs/"
 
 # store curr connected devices:
 ls $DEVICE_PATH > /tmp/prev_usb.txt
@@ -22,7 +23,10 @@ rm /tmp/curr_usb.txt /tmp/prev_usb.txt
 
 python3 ./scripts/config.py $DEVICE_PATH$DEV_PORT $BAUD_RATE
 
-mkdir ./logs/
+if [[ ! -e "$LOG_PATH" ]]; then
+	mkdir ./logs/
+fi
+
 # we use the while loop to allow users to transmit more than once
 file_path=""
 while [ "$file_path" != "q" ]; do

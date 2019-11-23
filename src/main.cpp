@@ -41,6 +41,7 @@ void loop() {
       transmitting = true;
     } else {
       io.transmit();
+      io.getExtension();
       transmitting = false;
     }
     break;
