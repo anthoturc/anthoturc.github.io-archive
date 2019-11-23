@@ -48,11 +48,13 @@ public:
   SerialIO();
 
   board_state_e getBoardState();
-  void sendConfirmation(void);
   void readConfig(void);
-  void sendFile(void);    
-  void transmit(volatile char);
+  void sendFile(void);
+  void receive(void);
+  void handShake(void);
+  void transmit(void);
   void printConfig(void);
+  bool isConfigPrinted(void);
   void printExtension(void);
 
   bool is_config_printed {false};

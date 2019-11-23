@@ -4,16 +4,13 @@
 #include "nRF24L01.h"
 #include "serial_io.h"
 
+#define BAUD_RATE 115200
 #define CE 26
 #define CSN 25
 
 /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
 SerialIO io;
-
-#define BAUD_RATE 115200
-#define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
-
 volatile bool transmitting {false}; // placeholder for nRF states
 
 /* prototypes */
@@ -38,28 +35,16 @@ void loop() {
     break;
   
   case READY:
-    if (!io.is_config_printed) {
+    if (!io.isConfigPrinted()) {
       io.printConfig();
-      io.is_config_printed = true;
     }
 
-    while (Serial.available()) {
-      volatile char curr_char = (char) (Serial.read());
-      if (!transmitting) {
-
-        /*
-         * If the computer tells us it is ready, we respond to tell 
-         * it we are now ready to transmit.
-         */
-        if (curr_char == CONFIRMATION_CHAR) {
-          io.sendConfirmation();
-          transmitting = true;
-          sleep(1); // so that both computer and Arduino not listening at same time
-          break;
-        }
-      } else {
-        io.transmit(curr_char);
-      }
+    if (!transmitting) {
+      io.receive();
+      transmitting = true;
+    } else {
+      io.transmit();
+      transmitting = false;
     }
     break;
   

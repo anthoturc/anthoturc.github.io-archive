@@ -11,6 +11,7 @@ SerialIO::getBoardState()
     return board_state;
 }
 
+
 /*
  * Function readConfig reads data sent over serial to configure the desired channel
  * and address settings for transmission.
@@ -26,7 +27,7 @@ SerialIO::readConfig()
   switch (serial_state) {
   case FLUSHING:
 
-    /* Flush until read FLUSH_CONST FLUSH_COUNT  in a row */
+    /* Flush until read FLUSH_CONST FLUSH_COUNT in a row */
     while (true) {
       curr_byte = (uint8_t) (Serial.read());
       if (curr_byte == FLUSH_CONST) {
@@ -62,6 +63,53 @@ SerialIO::readConfig()
   }   
 }
 
+
+/*
+ * Function handShake() Waits for comuter to say it is ready, then we say we are ready back
+ * by sending and receiving CONFIRMATION_CHAR over Serial
+ */
+void
+SerialIO::handShake()
+{
+  char curr_char;
+
+  /* stay in while loop until computer says it is ready */
+  while (true) {
+    while (Serial.available()) {
+      curr_char = (char) (Serial.read());
+
+      /*
+      * If the computer tells us it is ready, we break to respond 
+      * that we are now ready to transmit.
+      */
+      if (curr_char == CONFIRMATION_CHAR) {
+        break;
+      }
+    }
+
+    if (curr_char == CONFIRMATION_CHAR) {
+      break;
+    }
+  }
+
+  /* sleep first so that both computer and Arduino not listening at same time */
+  sleep(1); 
+  Serial.print(CONFIRMATION_CHAR);
+}
+
+
+/*
+ * Function receive() takes care of RX functionality and breaks if we are to switch
+ * to TX state.
+ */
+void
+SerialIO::receive()
+{
+  handShake();
+  // TODO: READING TRANSMISSION
+}
+
+
 /*
  * Function transmit reads data sent over serial to configure the desired file
  * extension so we can decode our sent hex file.
@@ -69,32 +117,43 @@ SerialIO::readConfig()
  * Note that the extension must be sent first over transmission, then the data.  
  * This is taken into account in send_hex.py script.
  * 
- * We will send hex from the Arduino to the transmitter in chunks of 16 bytes.
- * Afterwards, we will send a confirmation back to the computer so that the computer
- * knows to send the next 16 bytes.  This is done because we may not be able to fit
- * our entire file to send in memory.
  */
 void 
-SerialIO::transmit(volatile char curr_char) 
+SerialIO::transmit() 
 {
-  if (sent_transmit_bytes < EXTENSION_BYTES) {
-    *p_file_extension = curr_char;
-    p_file_extension++;
-  } else {
-    sendFile();
-  } 
-  
-  if (sent_transmit_bytes == EXTENSION_BYTES-1) {
-    printExtension();
+  char curr_char;
+
+  /* first, collect our file extension */
+  while (true) {
+    while (Serial.available()) {
+      curr_char = (char) (Serial.read());
+      if (sent_transmit_bytes < EXTENSION_BYTES) {
+        *p_file_extension = curr_char;
+        p_file_extension++;
+      } 
+      
+      if (sent_transmit_bytes == EXTENSION_BYTES-1) {
+        printExtension();
+        break;
+      }
+
+      sent_transmit_bytes++;
+    }
   }
 
-  sent_transmit_bytes++; 
+  sendFile();
 }
 
+
+/*
+ * Function sendFile() sends hex from the Arduino to the transmitter in chunks of 16 bytes.
+ * Afterwards, we call handshake() so that the computer knows to send the next 16 bytes.  
+ * This transmission is done in chunks because we may not be able to fit our entire file 
+ * to send in memory at once.
+ */
 void 
 SerialIO::sendFile() 
 {
-
 }
 
 
@@ -109,7 +168,19 @@ SerialIO::printConfig()
   Serial.println(input_channel);
   Serial.print("Selected address: ");
   Serial.println(input_address.num);
+  is_config_printed = true;
 }
+
+
+/*
+ * Getter for is_config_printed
+ */
+bool
+SerialIO::isConfigPrinted() 
+{
+  return is_config_printed;
+}
+
 
 /*
  * Function printExtension() Prints the extension of the to-be-transmitted file.
@@ -123,14 +194,4 @@ SerialIO::printExtension()
       Serial.print(file_extension[i]);
     }
     Serial.println();
-}
-
-/*
- * Function sendConfirmation() Acknowledge to the computer that we are ready
- * to transmit data.
- */
-void 
-SerialIO::sendConfirmation() 
-{
-    Serial.print(CONFIRMATION_CHAR); 
 }

@@ -29,22 +29,65 @@ Sends:
 """
 import sys
 import serial
+import time
 
+# Max amount of time to wait duing our handshake before we throw and exception
+MAX_HANDSHAKE_SEC = 10
+
+# used to communicate state changes between the Arduino and Computer
+HANDSHAKE_CHAR = '\t'
+
+# byte to send to Arduino to signal that we are about to send a file
+HANDSHAKE_CHAR_BYTE = 9
+
+# tell Arduino to switch to transmit state
+HANDSHAKE_BYTE = bytearray()
+HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
+
+
+def handshake(ser):
+    """
+    Sends to the Arduino HANDSHAKE_BYTE, telling it we are about to send over data.
+    Then, we wait for a confimation from Arduino that it is ready via HANDSHAKE_CHAR
+    at which point we break, signifying a successful handshake.
+
+    We throw an error if handshake takes more than MAX_HANDSHAKE_SEC
+
+    Params:
+        ser:
+            Our initiallized pyserial serial port
+
+    Outputs:
+        None
+    """
+    ser.write(HANDSHAKE_BYTE)
+    config_string = ""
+
+    start_time = time.time()
+
+    # wait until we get confirmation from the Arduino
+    while True:
+        while ser.in_waiting:
+            config_string = ser.read(1).decode("utf-8")            
+            if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
+                raise Exception('Handshake time limit of {0} sec exceeded'.format(MAX_HANDSHAKE_SEC))
+            
+            if config_string == HANDSHAKE_CHAR:
+                break
+
+        if config_string and config_string == HANDSHAKE_CHAR:
+            break
+        
+        
  
+
 if __name__ == "__main__":
-
-    # Bit to send to Arduino to signal that we are about to send a file
-    TRANSMISSION_BIT = 9
-
-    # Size of char array in union representing extension on Arduino
+    
+    # size of char array in union representing extension on Arduino
     EXTENSION_LEN = 10
-
-    # used to communicate state changes between the Arduino and Computer
-    CONFIRMATION_CHAR = '\t'
 
     # TODO: send over size of hex as checksum if have time
     raw_hex_bytes = bytearray()  # our file to be sent
-    transmit_byte = bytearray()  # tell Arduino to switch to transmit state
     file_extension_bytes = bytearray()  # file extension being sent over, used for decoding
     file_extension = []
 
@@ -69,23 +112,11 @@ if __name__ == "__main__":
     # populating our byte arrays
     file_extension_bytes.extend(file_extension)
     raw_hex_bytes.extend(map(ord, sys.argv[4]))
-    transmit_byte.extend([TRANSMISSION_BIT])
+    
+    # initialte communication with the Arduino
+    handshake(ser)
 
-    # first we tell the Arduino to switch to transmit state
-    ser.write(transmit_byte)
-    config_string = ""
-
-    # then we wait until we get confirmation from the Arduino that it is transmitting
-    while True:
-        while ser.in_waiting:
-            config_string = ser.read(1).decode("utf-8")
-            if config_string == CONFIRMATION_CHAR:
-                break
-
-        if config_string and config_string == CONFIRMATION_CHAR:
-            break
-
-    # now we are ready to send over the extension and its contents one byte at a time
+    # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)
     # ser.write(raw_hex_bytes)
     
