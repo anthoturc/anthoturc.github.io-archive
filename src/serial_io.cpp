@@ -28,7 +28,7 @@ SerialIO::setConfig()
   case FLUSHING:
 
     /* Flush until read FLUSH_CONST FLUSH_COUNT in a row */
-    while (true) {
+    while (serial_flush_count != FLUSH_COUNT) {
       curr_byte = (uint8_t) (Serial.read());
       if (curr_byte == FLUSH_CONST) {
         serial_flush_count++;
@@ -38,7 +38,6 @@ SerialIO::setConfig()
 
       if (serial_flush_count == FLUSH_COUNT) {
         serial_state = READING;
-        break;
       }
     }
     break;
@@ -71,24 +70,17 @@ SerialIO::setConfig()
 void
 SerialIO::handShake()
 {
-  char curr_char;
+  char curr_char {'a'}; // arbirary initiallization != CONFIRMATION_CHAR
 
   /* stay in while loop until computer says it is ready */
-  while (true) {
-    while (Serial.available()) {
+  while (curr_char != CONFIRMATION_CHAR) {
+    
+    /*
+     * If the computer tells us it is ready, we break to respond 
+     * that we are now ready to transmit.
+     */
+    while (curr_char != CONFIRMATION_CHAR && Serial.available()) {
       curr_char = (char) (Serial.read());
-
-      /*
-      * If the computer tells us it is ready, we break to respond 
-      * that we are now ready to transmit.
-      */
-      if (curr_char == CONFIRMATION_CHAR) {
-        break;
-      }
-    }
-
-    if (curr_char == CONFIRMATION_CHAR) {
-      break;
     }
   }
 
@@ -120,19 +112,20 @@ SerialIO::setExtension()
 
   /* first, collect our file extension */
   while (n_setter_bytes != EXTENSION_BYTES-1) {
-    while (Serial.available()) {
+    while ((n_setter_bytes != EXTENSION_BYTES-1) && Serial.available()) {
       curr_char = (char) (Serial.read());
-      if (n_setter_bytes < EXTENSION_BYTES) {
-        *p_file_extension = curr_char;
-        p_file_extension++;
-      } 
+      *p_file_extension = curr_char;
+      p_file_extension++;
       
+      n_setter_bytes++;
+      // for debugging
       if (n_setter_bytes == EXTENSION_BYTES-1) {
-        printConfig(); // for debugging
-        break;
+          print(input_channel);
+          print(input_address.num);
+          print((char *)file_extension);
       }
 
-      n_setter_bytes++;
+      
     }
   }
 }
@@ -166,6 +159,32 @@ SerialIO::getChannel(void)
 
 
 /*
+ */
+void 
+SerialIO::setFileHexSize() 
+{
+  char curr_char;
+  uint8_t sent_bytes {0};
+  
+  handShake();
+
+  while (sent_bytes != CUNK_SIZE_BYTES) {
+    while ((sent_bytes != CUNK_SIZE_BYTES) && Serial.available()) {
+      curr_char = (char) (Serial.read());
+      *p_next_chunk_size = curr_char;
+      p_next_chunk_size++;
+      sent_bytes++;
+      if (sent_bytes == CUNK_SIZE_BYTES) {
+          print(next_chunk_size.num);
+      }
+
+      
+    }
+  }
+}
+
+
+/*
  * Function setFileHexChunk() gets the raw hex of our file from the computer in chunks of 80k bytes.
  * Afterwards, we call handshake() so that the computer knows to send the next 80k bytes.  
  * This transmission is done in chunks because we may not be able to fit our entire file 
@@ -174,32 +193,36 @@ SerialIO::getChannel(void)
 void 
 SerialIO::setFileHexChunk() 
 {
+  char curr_char;
+  uint8_t sent_bytes {0};
+  
+  setFileHexSize();
   handShake();
-}
+  sent_bytes = 0;
+  while (sent_bytes != next_chunk_size.num) {
+    while ((sent_bytes != next_chunk_size.num) && Serial.available()) {
+      curr_char = (char) (Serial.read());
+      *p_file_chunk = curr_char;
+      p_file_chunk++;
+      sent_bytes++;
+      if (sent_bytes == next_chunk_size.num) {
+          print(file_chunk);
+      }
 
-/*
- * Function printExtension() Prints the extension of the to-be-transmitted file.
- * More for debugging purposes.
- */
-void 
-SerialIO::printConfig() 
-{
-  Serial.print(input_channel);
-  Serial.print(CONFIRMATION_CHAR);
-  Serial.print(input_address.num);
-  Serial.print(CONFIRMATION_CHAR);
-  for (auto i {0}; i < EXTENSION_BYTES; ++i) {
-    Serial.print(file_extension[i]);
+      
+      n_setter_bytes++;
+    }
   }
-  Serial.print(CONFIRMATION_CHAR);
 }
+
 
 /*
  * Function printExtension() Prints the extension of the to-be-transmitted file.
  * More for debugging purposes.
  */
+template <typename T>
 void 
-SerialIO::print(uint8_t data) 
+SerialIO::print(T data) 
 {
   Serial.print(data);
   Serial.print(CONFIRMATION_CHAR);

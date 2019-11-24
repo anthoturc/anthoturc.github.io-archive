@@ -11,6 +11,7 @@
 #define FLUSH_COUNT 5  // number of sequential FLUSH_CONST needed to switch serial_state_e to READING
 #define CHANNEL_BYTES 1  // only 126 possible channels so use 1 byte
 #define ADDRESS_BYTES 4  // address width
+#define CUNK_SIZE_BYTES 4  // address width
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
 #define BAUD_RATE 115200
 #define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
@@ -18,12 +19,12 @@
 
 
 /*
- * user input data pipe address
+ * 32 bit value sent over serial
  */
 typedef union {
   uint32_t num;
   uint8_t bytes[4];
-} address;
+} uint32_serial_u;
 
 
 /*
@@ -54,11 +55,14 @@ public:
 
   void handShake(void);
   void sendFile(void);
-  void print(uint8_t);
+
+  template <typename T>
+  void print(T);
 
   /* Setters */
   void setConfig(void);
   void setExtension(void);
+  void setFileHexSize(void);
   void setFileHexChunk(void);
 
   /* Getters */
@@ -68,8 +72,6 @@ public:
   uint8_t getChannel(void);
 
 private:
-  void printConfig(void);  // for debugging
-
   board_state_e board_state {CONFIG};
   serial_state_e serial_state {FLUSHING};
 
@@ -82,7 +84,7 @@ private:
    */
   uint8_t sent_config_bytes {0};
   uint8_t input_channel {0};
-  address input_address;
+  uint32_serial_u input_address;
   uint8_t * p_input_address {input_address.bytes};
 
   /* 
@@ -96,7 +98,8 @@ private:
   /* -----file configuration variables----- */
   char file_extension[EXTENSION_BYTES];
   char * p_file_extension {file_extension};
-  byte file_chunk[MAX_FILE_CHUNK_BYTES];
+  char file_chunk[MAX_FILE_CHUNK_BYTES];
+  char * p_file_chunk {file_chunk};
   
   /*
    * Keep track of the file size, including extension
@@ -104,6 +107,8 @@ private:
    * (feature not implemented yet)
    */
   uint8_t n_setter_bytes {0};
+  uint32_serial_u next_chunk_size;
+  uint8_t * p_next_chunk_size {next_chunk_size.bytes};
 };
 
 #endif /* _SERIAL_IO_H_ */
