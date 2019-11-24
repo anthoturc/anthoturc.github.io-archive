@@ -276,10 +276,15 @@
 #define RF_PWR_0 1
 #define RF_PWR_1 2
 
-#define SPI_SETTINGS SPISettings(SPI_FRQ, LSBFIRST, SPI_MODE0)
+#define SPI_SETTINGS SPISettings(SPI_FRQ, MSBFIRST, SPI_MODE0)
 
-#define ADDRESS_WIDTH_CONFIG 0b00000001
-#define ADDRESS_WIDTH 3
+#define MIN_ADDRESS_WIDTH 3
+#define MAX_ADDRESS_WIDTH 5
+
+/*
+ * When writing to a register we take the lower 5 bits
+ */
+#define REGISTER_MASK 0x1F
 
 /*
  *  The module uses a packet structure called Enhanced ShockBurst.
@@ -359,6 +364,13 @@ namespace nRF24Module {
         W_TX_PAYLOAD_NO_ACK     = 0b10110000,
         NOP                     = 0b11111111,    
     };
+
+    enum data_rate
+    {
+        DATA_RATE_1MBPS = 0b00000000,
+        DATA_RATE_2MBPS = 0b00001000,
+        DATA_RATE_250KBPS = 0b00100000,
+    };
     
     class nRF24 
     {
@@ -376,19 +388,35 @@ namespace nRF24Module {
         void setToTransmitter();
 
         void setChannel(uint8_t channel);
+        uint8_t getChannel();
+
         void setReadingPipeAddr(uint8_t pipe, uint8_t * address);
-        void setListeningAddr(uint8_t * address);
+        void setWritingAddress(uint8_t * address);
+
+        void setDataRate(data_rate rate);
+
+        void setAddressWidth(uint8_t aw);
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
-        
+        uint8_t addressWidth_;        
         bool txMode_;
 
-        void setAddressWidth();
-        void setDataRate();
-
         data_frame_u makeFrame(uint8_t cmd, byte data);
-        void writeConfiguration(uint8_t cmd, uint8_t data);
+        
+        /* modification of registers */
+        void setRegister(uint8_t r, uint8_t data);
+        uint8_t getRegister(uint8_t r);
+
+        void beginTransaction();
+        void endTransaction();
+
+        void powerOn();
+        void powerOff();
+        
+        void setToStandBy();
+
+        void flushPayload(uint8_t cmd);
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
