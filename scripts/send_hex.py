@@ -17,9 +17,6 @@ Params:
         Plain raw-hex string of file to send
 
 Sends:
-    transmit_byte:
-        Signals to the Arduino to change to TX state
-    
     file_extension_bytes:
         File extension of our sent file
     
@@ -44,6 +41,9 @@ HANDSHAKE_CHAR_BYTE = 9
 HANDSHAKE_BYTE = bytearray()
 HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
 
+# Max bytes to send over to the Arduino at one time
+MAX_HEX_CHUNK_BYTES = 255 # NO MORE THAN 255 OVER SERIAL AT ONCE?
+
 
 def handshake(ser):
     """
@@ -66,23 +66,66 @@ def handshake(ser):
     start_time = time.time()
     time.sleep(1)
     # wait until we get confirmation from the Arduino
-    while True:
-        while ser.in_waiting:
+    while config_string != HANDSHAKE_CHAR:
+        while config_string != HANDSHAKE_CHAR and ser.in_waiting:
             config_string = ser.read(1).decode("utf-8")            
             if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
                 raise Exception('Handshake time limit of {0} sec exceeded'.format(MAX_HANDSHAKE_SEC))
-            
-            if config_string == HANDSHAKE_CHAR:
-                break
+        
+        if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
+            raise Exception('Handshake time limit of {0} sec exceeded'.format(MAX_HANDSHAKE_SEC))
+        
 
-        if config_string and config_string == HANDSHAKE_CHAR:
-            break
+def chunkGenerator(data):
+    """
+    Generator to split data into chunks to be sent over serial.
+
+    Params:
+        data:
+            string: hex data to be sent to Arduino
+    
+    Yields:
+        string: next chunk of data with size <= MAX_HEX_CHUNK_BYTES
+    """
+    i = -MAX_HEX_CHUNK_BYTES
+    j = 0
+    for _ in range(len(data) // MAX_HEX_CHUNK_BYTES):
+        i += MAX_HEX_CHUNK_BYTES
+        j += MAX_HEX_CHUNK_BYTES
+        yield data[i:j]
+    yield data[i + MAX_HEX_CHUNK_BYTES:len(data)]
+
+
+def printData(ser):
+    """
+    Prints data sent to the computer from the Arduino over seral.
+    Transmissions are seperated by the HANDSHAKE_CHAR.
+    
+    Params:
+        ser:
+            Our initiallized pyserial serial port
+
+    Outputs:
+        None
+    """
+    data = ""
+    curr = ""
+    time.sleep(1) # wait for the Arduino
+    while curr !=  HANDSHAKE_CHAR:
+        while curr !=  HANDSHAKE_CHAR and ser.in_waiting:
+            data += curr
+            curr = ser.read(1).decode("utf-8")
         
-        
+    print(data)
  
 
 if __name__ == "__main__":
     
+    # We are going to store the configured integers in our Arduino in a Union, 
+    # by sending over our individal bytes and storing them in memory.  
+    # Thus, we need to consider the endianess of our Arduino
+    ENDIANESS = 'little'
+
     # size of char array in union representing extension on Arduino
     EXTENSION_LEN = 10
 
@@ -117,30 +160,25 @@ if __name__ == "__main__":
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)
 
-    # for debugging communication
-    ext = ""
-    time.sleep(1)
-    while True:
-        while ser.in_waiting:
-            curr = ser.read(1).decode("utf-8")
-            
-            if curr ==  HANDSHAKE_CHAR:
-                print(ext)
-                if ext[0] not in set([str(x) for x in range(10)]):
-                    break            
-                ext = ""
-            else:
-                ext += curr
-        
-        if ext[0] not in set([str(x) for x in range(10)]):
-            break            
+    for _ in range(3):
+        printData(ser)      
+    
+    
+    chunks = chunkGenerator(raw_hex_bytes)
+    for c in chunks:
+        time.sleep(1)
+        handshake(ser)
+        total = len(c) 
+        total = total.to_bytes(4, byteorder=ENDIANESS)
+        ser.write(total)
 
-    time.sleep(1)
-    handshake(ser)
-    
-    # send 80000 bytes at a time = 80000 transmissions
-    
-    print(len(raw_hex_bytes))
-    # ser.write(raw_hex_bytes)
+        printData(ser)  
+
+        time.sleep(1)
+        handshake(ser)
+        ser.write(c)
+
+        printData(ser)
+        break
     
     ser.close()

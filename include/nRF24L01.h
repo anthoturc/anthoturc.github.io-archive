@@ -376,6 +376,8 @@ namespace nRF24Module {
         void setToTransmitter();
 
         void setChannel(uint8_t channel);
+        uint8_t getChannel();
+        
         void setReadingPipeAddr(uint8_t pipe, uint8_t * address);
         void setListeningAddr(uint8_t * address);
     private:

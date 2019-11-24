@@ -24,34 +24,46 @@ void setup() {
   pinMode(A2, PULLUP);
   attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
   Serial.begin(BAUD_RATE);
+  
+  io.setConfig();
 }
 
 void loop() {
-  switch (io.getBoardState()) {
-  case CONFIG:
-    while (Serial.available()) {
-      io.setConfig();
-    }
-    break;
-  
-  case READY:
+  if (!transmitting) {
+    // nRF receiving
 
-    if (!transmitting) {
-      io.sendFile();
-      transmitting = true;
-    } else {
-      io.setExtension();
-      io.getExtension();
-      io.getAddress();
-      io.getChannel();
-      transmitting = false;
-    }
-    break;
-  
-  /* We have to be in CONFIG or READY */
-  default:
-    break; 
-  } 
+    // if data available:
+    transmitting = true;
+  } else {
+    io.setExtension();
+    io.setFileHexChunk();
+    // char * ext = io.getExtension();
+    // uint8_t * addr = io.getAddress();
+    // uint8_t channel = io.getChannel();
+
+    // radio.setToTransmitter();
+    // radio.setListeningAddr(addr);
+    // radio.setChannel(channel);
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // while (true) {
+    //   radio.writeSPI((byte *)ext, EXTENSION_BYTES);
+    // }
+    transmitting = false;
+  }
 }
 
 
