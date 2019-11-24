@@ -39,7 +39,7 @@ typedef enum
 
 
 /*
- * States signify whether the serial is active or not (being flushed)
+ * States signify whether the serial should be read or not (being flushed)
  */
 typedef enum 
 {
@@ -53,62 +53,48 @@ class SerialIO
 public:
   SerialIO();
 
-  void handShake(void);
-  void sendFile(void);
-
-  template <typename T>
-  void print(T);
-
-  /* Setters */
-  void setConfig(void);
-  void setExtension(void);
-  void setFileHexSize(void);
-  void setFileHexChunk(void);
-
   /* Getters */
   board_state_e getBoardState();
   char * getExtension(void);
   uint8_t * getAddress(void);
   uint8_t getChannel(void);
 
-private:
-  board_state_e board_state {CONFIG};
-  serial_state_e serial_state {FLUSHING};
+  /* Setters */
+  void setFromSerial(char *, uint32_t, bool);
+  void setFromSerial(uint8_t *, uint32_t);
+  void setConfig(void);
+  void setExtension(void);
+  void setFileHexSize(void);
+  void setFileHexChunk(void);
 
+  /* Auxillary Functions */
+  void handShake(void);
+  void flushSerial(void);
+
+  /* Arduino -> Computer */
+  template <typename T>
+  void send(T);
+
+
+private:
 
   /* -----communication configuration variables----- */
-  /* 
-   * keeps track of how many config bytes sent so we know
-   * if the curr byte should be included in the address var
-   * or the channel var
-   */
-  uint8_t sent_config_bytes {0};
+  board_state_e board_state {CONFIG};
+  serial_state_e serial_state {FLUSHING};
   uint8_t input_channel {0};
   uint32_serial_u input_address;
-  uint8_t * p_input_address {input_address.bytes};
-
-  /* 
-   * keeps track of how many consecutive FLUSH_CONST we
-   * receive in a row, so we know when to start reading from
-   * the serial.
-   */
-  uint8_t serial_flush_count {0};
 
 
   /* -----file configuration variables----- */
   char file_extension[EXTENSION_BYTES];
-  char * p_file_extension {file_extension};
+  uint32_serial_u next_chunk_size;
   char file_chunk[MAX_FILE_CHUNK_BYTES];
-  char * p_file_chunk {file_chunk};
   
   /*
-   * Keep track of the file size, including extension
-   * so that we can perform a checksum after comunication
-   * (feature not implemented yet)
+   * Keep track of the file size so that we can perform a checksum
+   * after comunication (feature not implemented yet)
    */
-  uint8_t n_setter_bytes {0};
-  uint32_serial_u next_chunk_size;
-  uint8_t * p_next_chunk_size {next_chunk_size.bytes};
+  uint32_t file_size {0};
 };
 
 #endif /* _SERIAL_IO_H_ */

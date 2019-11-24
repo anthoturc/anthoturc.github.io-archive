@@ -24,12 +24,8 @@ void setup() {
   pinMode(A2, PULLUP);
   attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
   Serial.begin(BAUD_RATE);
-
-  while (io.getBoardState() == CONFIG) {
-    while (Serial.available()) {
-      io.setConfig();
-    }
-  }
+  
+  io.setConfig();
 }
 
 void loop() {
@@ -37,7 +33,6 @@ void loop() {
     // nRF receiving
 
     // if data available:
-    io.sendFile();
     transmitting = true;
   } else {
     io.setExtension();

@@ -94,6 +94,29 @@ def chunkGenerator(data):
         j += MAX_HEX_CHUNK_BYTES
         yield data[i:j]
     yield data[i + MAX_HEX_CHUNK_BYTES:len(data)]
+
+
+def printData(ser):
+    """
+    Prints data sent to the computer from the Arduino over seral.
+    Transmissions are seperated by the HANDSHAKE_CHAR.
+    
+    Params:
+        ser:
+            Our initiallized pyserial serial port
+
+    Outputs:
+        None
+    """
+    data = ""
+    curr = ""
+    time.sleep(1) # wait for the Arduino
+    while curr !=  HANDSHAKE_CHAR:
+        while curr !=  HANDSHAKE_CHAR and ser.in_waiting:
+            data += curr
+            curr = ser.read(1).decode("utf-8")
+        
+    print(data)
  
 
 if __name__ == "__main__":
@@ -137,68 +160,25 @@ if __name__ == "__main__":
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)
 
-    ext = ""
-    time.sleep(1)
-    while True:
-        while ser.in_waiting:
-            curr = ser.read(1).decode("utf-8")
-            
-            if curr ==  HANDSHAKE_CHAR:
-                print(ext)
-                if ext[0] not in set([str(x) for x in range(10)]):
-                    break            
-                ext = ""
-            else:
-                ext += curr
-        
-        if ext[0] not in set([str(x) for x in range(10)]):
-            break          
+    for _ in range(3):
+        printData(ser)      
     
     
     chunks = chunkGenerator(raw_hex_bytes)
     for c in chunks:
-        print("test", c)
         time.sleep(1)
         handshake(ser)
         total = len(c) 
         total = total.to_bytes(4, byteorder=ENDIANESS)
         ser.write(total)
 
-        ext = ""
-        curr = ""
-        time.sleep(1)
-        while True:
-            while ser.in_waiting:
-                curr = ser.read(1).decode("utf-8")
-                
-                if curr ==  HANDSHAKE_CHAR: 
-                    print(ext)
-                    break
-                else:
-                    ext += curr
-            
-            if curr ==  HANDSHAKE_CHAR:
-                break   
+        printData(ser)  
 
         time.sleep(1)
         handshake(ser)
         ser.write(c)
 
-        ext = ""
-        curr = ""
-        time.sleep(1)
-        while True:
-            while ser.in_waiting:
-                curr = ser.read(1).decode("utf-8")
-                
-                if curr ==  HANDSHAKE_CHAR:
-                    print(ext)
-                    break
-                else:
-                    ext += curr
-            
-            if curr ==  HANDSHAKE_CHAR:
-                break  
+        printData(ser)
         break
     
     ser.close()
