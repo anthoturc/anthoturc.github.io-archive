@@ -4,11 +4,11 @@
 #include "nRF24L01.h"
 #include "serial_io.h"
 
-#define BAUD_RATE 115200
+// // #define BAUD_RATE 115200
 #define CE 26
 #define CSN 25
 
-/* create an instance of the radio */
+// /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
 SerialIO io;
 volatile bool transmitting {false}; // placeholder for nRF states
@@ -67,8 +67,8 @@ void loop() {
 }
 
 
-/*
- * TODO: ISR for IRQ pin on antenna
- */
-void ISR_Antenna() {
-}
+// /*
+//  * TODO: ISR for IRQ pin on antenna
+//  */
+// void ISR_Antenna() {
+// }
