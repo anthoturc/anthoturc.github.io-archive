@@ -130,6 +130,22 @@ nRF24::getChannel()
     return getRegister(RF_CH);
 }
 
+uint8_t 
+nRF24::getChannel()
+{
+    SPI.beginTransaction(SPI_SETTINGS);
+    digitalWrite(csnPin_, LOW);
+
+    data_frame_u df = makeFrame(R_REGISTER | RF_CH, NO_DATA);
+    uint16_t data =SPI.transfer16(df.data_frame);
+    
+
+    SPI.endTransaction();
+    digitalWrite(csnPin_, HIGH);
+
+    return ((data << 8) >> 8);
+}
+
 void 
 nRF24::setReadingPipeAddr(uint8_t pipe, uint8_t * address)
 {

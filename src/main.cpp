@@ -1,10 +1,8 @@
 #include <Arduino.h>
-#include <SoftwareSerial.h>
-
 #include <SPI.h>
 #include <stdint.h>
 #include "nRF24L01.h"
-// #include "serial_io.h"
+#include "serial_io.h"
 
 // // #define BAUD_RATE 115200
 #define CE 26
@@ -12,65 +10,61 @@
 
 // /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
+SerialIO io;
+volatile bool transmitting {false}; // placeholder for nRF states
 
-void setup() {  
-  Serial.begin(9600);
-  while (!Serial);
+/* prototypes */
+void ISR_Antenna(void);
 
-  radio.setChannel(8);
-  radio.setToTransmitter();
+
+void setup() {
+  SPI.begin();
+
+  /* Antenna is active low */
+  pinMode(A2, PULLUP);
+  attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
+  Serial.begin(BAUD_RATE);
+  
+  io.setConfig();
 }
 
 void loop() {
-  Serial.println("Getting the channel");
-  uint8_t data = radio.getChannel();
-  Serial.println(data);
-  delay(2000);
+  if (!transmitting) {
+    // nRF receiving
+
+    // if data available:
+    transmitting = true;
+  } else {
+    io.setExtension();
+    io.setFileHexChunk();
+    // char * ext = io.getExtension();
+    // uint8_t * addr = io.getAddress();
+    // uint8_t channel = io.getChannel();
+
+    // radio.setToTransmitter();
+    // radio.setListeningAddr(addr);
+    // radio.setChannel(channel);
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // delay(1000);
+    // io.print(radio.getChannel());
+
+    // while (true) {
+    //   radio.writeSPI((byte *)ext, EXTENSION_BYTES);
+    // }
+    transmitting = false;
+  }
 }
-
-// SerialIO io;
-// volatile bool transmitting {false}; // placeholder for nRF states
-
-// /* prototypes */
-// void ISR_Antenna(void);
-
-
-// void setup() {
-//   SPI.begin();
-
-//   /* Antenna is active low */
-//   pinMode(A2, PULLUP);
-//   attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
-//   Serial.begin(BAUD_RATE);
-// }
-
-// void loop() {
-//   switch (io.getBoardState()) {
-//   case CONFIG:
-//     while (Serial.available()) {
-//       io.setConfig();
-//     }
-//     break;
-  
-//   case READY:
-
-//     if (!transmitting) {
-//       io.sendFile();
-//       transmitting = true;
-//     } else {
-//       io.setExtension();
-//       io.getExtension();
-//       io.getAddress();
-//       io.getChannel();
-//       transmitting = false;
-//     }
-//     break;
-  
-//   /* We have to be in CONFIG or READY */
-//   default:
-//     break; 
-//   } 
-// }
 
 
 // /*
