@@ -17,7 +17,7 @@ SerialIO::getBoardState()
 }
 
 /*
- * Getter for file extension, set after setTransmission() is run
+ * Getter for file extension, set after setConfig() is run
  */
 char *
 SerialIO::getExtension()
@@ -26,7 +26,7 @@ SerialIO::getExtension()
 }
 
 /*
- * Getter for address, set after setTransmission() is run
+ * Getter for address, set after setConfig() is run
  */
 uint8_t * 
 SerialIO::getAddress(void) 
@@ -35,7 +35,7 @@ SerialIO::getAddress(void)
 }
 
 /*
- * Getter for channel, set after setTransmission() is run
+ * Getter for channel, set after setConfig() is run
  */
 uint8_t 
 SerialIO::getChannel(void) 
@@ -43,25 +43,39 @@ SerialIO::getChannel(void)
   return input_channel;
 }
 
+/*
+ * Getter for file_chunk, set after setFileHexChunk() is run
+ */
+char *
+SerialIO::getFileChunk(void)
+{
+  return file_chunk;
+}
+
+/*
+ * Getter for next_chunk_size, set after setFileChunkSize() is run
+ */
+uint8_t
+SerialIO::getFileChunkSize(void)
+{
+  return next_chunk_size;
+}
+
 
 /* -----Setters----- */
 
 /*
  * Reads from Serial to set a variable of a predetermined size, by setting
- * one byte at a time.  If the value to be set is a file chunk, we can flag
- * with is_file_bytes to indicate that we want to count the total number of bytes
- * sent over to perform checksum functionality on the RX end (future functionality).
+ * one byte at a time.  
  * 
  * Params:
  *  toSet: 
  *    Our char * to set over serial
  *  size:
  *    size in bytes of toSet
- *  is_file_bytes:
- *    boolean flag to indicate if we are setting a file chunk
  */
 void
-SerialIO::setFromSerial(char * toSet, uint32_t size, bool is_file_bytes) 
+SerialIO::setFromSerial(char * toSet, uint32_t size) 
 {
   char curr_char;
   uint32_t sent_bytes {0};
@@ -72,26 +86,19 @@ SerialIO::setFromSerial(char * toSet, uint32_t size, bool is_file_bytes)
       *toSet = curr_char;
       toSet++;
       sent_bytes++;
-      
-      if (is_file_bytes) {
-        file_size++;
-      }
     }
   }
 }
 
 /*
  * Reads from Serial to set a variable of a predetermined size, by setting
- * one byte at a time.  If the value to be set is a file chunk, we can flag
- * with is_file_bytes to indicate that we want to count the total number of bytes
- * sent over to perform checksum functionality on the RX end (future functionality).
+ * one byte at a time.
  * 
  * Params:
  *  toSet: 
  *    Our uint8_t * to set over serial
  *  size:
  *    size in bytes of toSet
-
  */
 void
 SerialIO::setFromSerial(uint8_t * toSet, uint32_t size) 
@@ -148,8 +155,7 @@ SerialIO::setConfig()
 void
 SerialIO::setExtension()
 {
-  handShake();
-  setFromSerial(file_extension, (uint32_t) EXTENSION_BYTES, false); 
+  setFromSerial(file_extension, (uint32_t) EXTENSION_BYTES); 
 
   // for debugging
   send(input_channel);
@@ -157,38 +163,68 @@ SerialIO::setExtension()
   send((char *)file_extension);
 }
 
-
 /*
- * Function setFileHexChunk() reads raw hex of our to-be-sent file over serial
+ * Function setFileChunk() reads raw hex of our to-be-sent file over serial
  * to set our next file chunk, which will be sent over from our TX board to our 
  * RX board.  Note that our file must be sent in chunks because we are unable to 
  * fit it entirely on the board, so we must determine the size of each chunk via 
- * setFileHexSize(), sent to us over serial via the sed_hex.py script
+ * setFileMiniChunkSize(), sent to us over serial via the send_hex.py script
  */
 void 
-SerialIO::setFileHexChunk() 
+SerialIO::setFileChunk() 
 {
-
-  setFileHexSize();
-  handShake();
-  setFromSerial(file_chunk, next_chunk_size.num, true);
-
-  // for debugging
-  send(file_chunk);
+  setFromSerial(file_chunk, next_chunk_size);
 }
 
+
 /*
- * Function setFileHexSize() reads data sent over serial to set the size of our
+ * Function setFileChunkSize() reads data sent over serial to set the size of our
  * next hex chunk of our to-be-sent file.
  */
 void 
-SerialIO::setFileHexSize() 
+SerialIO::setFileChunkSize() 
 {
-  handShake();
-  setFromSerial(next_chunk_size.bytes, (uint32_t) CUNK_SIZE_BYTES);
-  
-  // for debugging
-  send(next_chunk_size.num);
+  setFromSerial(&next_chunk_size, (uint32_t) CUNK_SIZE_BYTES);
+}
+
+
+/*
+ * Function emptyFileChunk() resets file_chunk array by setting all byte values
+ * to 0
+ */
+void 
+SerialIO::emptyFileChunk() 
+{
+  /* Reset all values of our file chunk */
+  for (uint8_t i = 0; i < MAX_CHUNK_CHARS; ++i) {
+    file_chunk[i] = 0;
+  }
+}
+
+/*
+ * Function emptyFileChunk() resets file_chunk array by setting all byte values
+ * to 0
+ */
+void 
+SerialIO::emptyFileExtension() 
+{
+  /* Reset all values of our file chunk */
+  for (uint8_t i = 0; i < EXTENSION_BYTES; ++i) {
+    file_extension[i] = 0;
+  }
+}
+
+
+/*
+ * Function softReset() resets io object's file parameters while maintaining its 
+ * configuration
+ */
+void 
+SerialIO::softReset() 
+{
+  emptyFileChunk();
+  emptyFileExtension();
+  next_chunk_size = 0;
 }
 
 
@@ -211,8 +247,10 @@ SerialIO::handShake()
     }
   }
 
+  #if 0
   /* sleep first so that both computer and Arduino not listening at same time */
-  sleep(1); 
+  sleep(1);
+  #endif 
 
   /* now tell the computer that we are ready too */
   Serial.print(CONFIRMATION_CHAR);
@@ -246,11 +284,23 @@ SerialIO::flushSerial()
 /*
  * Function send() Prints over serial our data, then sends a CONFIRMATION_CHAR
  * to indicate that the transmission is over
- * More for debugging purposes.
  */
-template <typename T>
-void 
-SerialIO::send(T data) 
+void
+SerialIO::send(uint8_t data) 
+{
+  Serial.print(data);
+  Serial.print(CONFIRMATION_CHAR);
+}
+
+void
+SerialIO::send(uint32_t data) 
+{
+  Serial.print(data);
+  Serial.print(CONFIRMATION_CHAR);
+}
+
+void
+SerialIO::send(char * data) 
 {
   Serial.print(data);
   Serial.print(CONFIRMATION_CHAR);
