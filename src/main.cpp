@@ -35,33 +35,27 @@ void loop() {
     // if data available:
     transmitting = true;
   } else {
+    io.handShake();
     io.setExtension();
-    io.setFileHexChunk();
-    // char * ext = io.getExtension();
-    // uint8_t * addr = io.getAddress();
-    // uint8_t channel = io.getChannel();
+    io.handShake();
+    io.setFileChunkSize();
 
-    // radio.setToTransmitter();
-    // radio.setListeningAddr(addr);
-    // radio.setChannel(channel);
-    // delay(1000);
-    // io.print(radio.getChannel());
+    /* 
+    * We keep filling and sending our chunks until we do not have enough bytes to
+    * full our entire chunk array, at which point we break the while loop,
+    * reset our array, and send the reamining bit of our file
+    */
+    while (io.getFileChunkSize() == MAX_CHUNK_CHARS) {
+      io.setFileChunk();
+      io.send(io.getFileChunk());
+      io.setFileChunkSize();
+    }
 
-    // delay(1000);
-    // io.print(radio.getChannel());
+    io.emptyFileChunk();
+    io.setFileChunk();
+    io.send(io.getFileChunk());
 
-    // delay(1000);
-    // io.print(radio.getChannel());
-
-    // delay(1000);
-    // io.print(radio.getChannel());
-
-    // delay(1000);
-    // io.print(radio.getChannel());
-
-    // while (true) {
-    //   radio.writeSPI((byte *)ext, EXTENSION_BYTES);
-    // }
+    io.softReset();
     transmitting = false;
   }
 }

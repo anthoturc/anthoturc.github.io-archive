@@ -42,7 +42,7 @@ HANDSHAKE_BYTE = bytearray()
 HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
 
 # Max bytes to send over to the Arduino at one time
-MAX_HEX_CHUNK_BYTES = 255 # NO MORE THAN 255 OVER SERIAL AT ONCE?
+MAX_HEX_CHUNK_BYTES = 255 # NO MORE THAN 255 OVER SERIAL AT ONCE dues to serial buffer size
 
 
 def handshake(ser):
@@ -96,27 +96,30 @@ def chunkGenerator(data):
     yield data[i + MAX_HEX_CHUNK_BYTES:len(data)]
 
 
-def printData(ser):
+def printData(ser, end_char='\n'):
     """
     Prints data sent to the computer from the Arduino over seral.
     Transmissions are seperated by the HANDSHAKE_CHAR.
-    
+
     Params:
         ser:
             Our initiallized pyserial serial port
+        end_char:
+            String: End line character after print statement
+
 
     Outputs:
         None
     """
     data = ""
     curr = ""
-    time.sleep(1) # wait for the Arduino
+    # time.sleep(1) # wait for the Arduino
     while curr !=  HANDSHAKE_CHAR:
         while curr !=  HANDSHAKE_CHAR and ser.in_waiting:
             data += curr
             curr = ser.read(1).decode("utf-8")
         
-    print(data)
+    print(data, end=end_char)
  
 
 if __name__ == "__main__":
@@ -163,22 +166,22 @@ if __name__ == "__main__":
     for _ in range(3):
         printData(ser)      
     
-    
+    handshake(ser)
     chunks = chunkGenerator(raw_hex_bytes)
     for c in chunks:
-        time.sleep(1)
-        handshake(ser)
+        # time.sleep(1)
+        # handshake(ser)
         total = len(c) 
-        total = total.to_bytes(4, byteorder=ENDIANESS)
+        total = total.to_bytes(1, byteorder=ENDIANESS)
         ser.write(total)
 
-        printData(ser)  
+         
 
-        time.sleep(1)
-        handshake(ser)
+        # time.sleep(1)
+        # handshake(ser)
         ser.write(c)
 
-        printData(ser)
-        break
+        # printData(ser)
+        printData(ser, '') 
     
     ser.close()
