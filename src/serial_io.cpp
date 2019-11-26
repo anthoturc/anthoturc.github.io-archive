@@ -240,12 +240,12 @@ SerialIO::softReset()
 /* -----Auxillary Functions----- */
 
 /*
- * Function handShake() establishes a line of communication between the computer and Arduino.
+ * Function handShakeTX() establishes a line of communication between the computer and Arduino.
  * First, we (from the Arduino) wait for the computer to say it is ready, then we say we are 
  * ready back by sending and receiving CONFIRMATION_CHAR over serial
  */
 void
-SerialIO::handShake()
+SerialIO::handShakeTX()
 {
   char curr_char {'a'}; // arbirary initiallization != CONFIRMATION_CHAR
 

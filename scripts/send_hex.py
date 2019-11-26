@@ -37,7 +37,7 @@ ENDIANESS = 'little'
 # size of char array in union representing extension on Arduino
 EXTENSION_LEN = 10
 
-# Max amount of time to wait duing our handshake before we throw and exception
+# Max amount of time to wait duing our handshakeTX before we throw and exception
 MAX_HANDSHAKE_SEC = 10
 
 # used to communicate state changes between the Arduino and Computer
@@ -56,18 +56,18 @@ HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
 MAX_HEX_CHUNK_BYTES = 224
 
 # used to debug communication
-DEBUG = 0
+DEBUG = 1
 
 
-def handshake(ser):
+def handshakeTX(ser):
     """
     Sends to the Arduino HANDSHAKE_BYTE, telling it we are about to send over data.
     Then, we wait for a confimation from Arduino that it is ready via HANDSHAKE_CHAR
-    at which point we break, signifying a successful handshake.  This funciton relies
-    on handshake function included in the serial_io class on the Arduino's side of 
+    at which point we break, signifying a successful handshakeTX.  This funciton relies
+    on handshakeTX function included in the serial_io class on the Arduino's side of 
     communication.
 
-    We throw an error if handshake takes more than MAX_HANDSHAKE_SEC
+    We throw an error if handshakeTX takes more than MAX_HANDSHAKE_SEC
 
     Params:
         ser:
@@ -87,7 +87,7 @@ def handshake(ser):
    # hanshake state until the Arduino sends over data, but that
    # may not happen instantly.  We also want to break out of
    # the innermost loop the second that we have the confirmation
-   # of our handshake from the Arduino's side
+   # of our handshakeTX from the Arduino's side
     while config_string != HANDSHAKE_CHAR:
         while config_string != HANDSHAKE_CHAR and ser.in_waiting:
             config_string = ser.read(1).decode("utf-8")            
@@ -175,19 +175,18 @@ if __name__ == "__main__":
     raw_hex_bytes.extend(map(ord, sys.argv[4]))
     
     # initialte communication with the Arduino
-    handshake(ser)
+    handshakeTX(ser)
 
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)   
     
     # precaution to make sure we are only sending file data over Serial
-    # handshake(ser)
     chunks = chunkGenerator(raw_hex_bytes)
     for c in chunks:
  
         # Shake between every transaction to make sure that the Arduino
         # is ready for our next chunk of data
-        handshake(ser)
+        handshakeTX(ser)
         # time.sleep(1)
         total = len(c) 
         total = total.to_bytes(1, byteorder=ENDIANESS)

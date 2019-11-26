@@ -79,7 +79,7 @@ public:
   void softReset(void);
 
   /* Auxillary Functions */
-  void handShake(void);
+  void handShakeTX(void);
   void flushSerial(void);
 
   /* Arduino -> Computer */

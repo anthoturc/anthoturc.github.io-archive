@@ -7,7 +7,7 @@
 // // #define BAUD_RATE 115200
 #define CE 26
 #define CSN 25
-#define DEBUG 0
+#define DEBUG 1
 
 // /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
@@ -38,14 +38,14 @@ void loop() {
     /* THIS SHOULD BE DONE WITH NRF STATE IN CLASS */
     transmitting = true;
   } else {
-    io.handShake();
+    io.handShakeTX();
     io.setExtension();
 
     /* 
      * Shake between every transaction to make signify to the computer that we are
      * ready for our next chunk of data
      */
-    io.handShake();
+    io.handShakeTX();
     io.setFileChunkSize();
 
     /* 
@@ -62,7 +62,7 @@ void loop() {
 
       /* SEND DATA OVER RADIO AND USE INTERUPT TO CONFIRM READY? */
 
-      io.handShake();  // shake between every transaction
+      io.handShakeTX();  // shake between every transaction
       io.setFileChunkSize();
     }
     io.emptyFileChunk();
