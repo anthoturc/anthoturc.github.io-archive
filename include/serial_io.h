@@ -17,7 +17,7 @@
  * Serial buffer is 128 bytes, so can represent #bytes send with a single byte
  */
 #define CUNK_SIZE_BYTES 1  
-#define MAX_CHUNK_CHARS 255 // given by the size of our Serial buffer
+#define MAX_CHUNK_CHARS 224 // given by the size of our Serial buffer
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
 #define BAUD_RATE 115200
 #define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
@@ -61,7 +61,8 @@ public:
   /* Getters */
   board_state_e getBoardState();
   char * getExtension(void);
-  uint8_t * getAddress(void);
+  uint8_t * getAddressBytes(void);
+  uint32_t getAddressNum(void);
   uint8_t getChannel(void);
   char * getFileChunk(void);
   uint8_t getFileChunkSize(void);

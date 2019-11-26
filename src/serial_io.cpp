@@ -29,9 +29,15 @@ SerialIO::getExtension()
  * Getter for address, set after setConfig() is run
  */
 uint8_t * 
-SerialIO::getAddress(void) 
+SerialIO::getAddressBytes(void) 
 {
   return input_address.bytes;
+}
+
+uint32_t
+SerialIO::getAddressNum(void) 
+{
+  return input_address.num;
 }
 
 /*
@@ -80,13 +86,11 @@ SerialIO::setFromSerial(char * toSet, uint32_t size)
   char curr_char;
   uint32_t sent_bytes {0};
 
-  while (sent_bytes < size) {
-    while (sent_bytes < size && Serial.available()) {
-      curr_char = (char) (Serial.read());
-      *toSet = curr_char;
-      toSet++;
-      sent_bytes++;
-    }
+  while (sent_bytes < size && Serial.available()) {
+    curr_char = (char) (Serial.read());
+    *toSet = curr_char;
+    toSet++;
+    sent_bytes++;
   }
 }
 
@@ -156,11 +160,6 @@ void
 SerialIO::setExtension()
 {
   setFromSerial(file_extension, (uint32_t) EXTENSION_BYTES); 
-
-  // for debugging
-  send(input_channel);
-  send(input_address.num);
-  send((char *)file_extension);
 }
 
 /*

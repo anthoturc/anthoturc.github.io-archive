@@ -28,6 +28,15 @@ import sys
 import serial
 import time
 
+    
+# We are going to store the configured integers in our Arduino in a Union, 
+# by sending over our individal bytes and storing them in memory.  
+# Thus, we need to consider the endianess of our Arduino
+ENDIANESS = 'little'
+
+# size of char array in union representing extension on Arduino
+EXTENSION_LEN = 10
+
 # Max amount of time to wait duing our handshake before we throw and exception
 MAX_HANDSHAKE_SEC = 10
 
@@ -41,15 +50,19 @@ HANDSHAKE_CHAR_BYTE = 9
 HANDSHAKE_BYTE = bytearray()
 HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
 
-# Max bytes to send over to the Arduino at one time
-MAX_HEX_CHUNK_BYTES = 255 # NO MORE THAN 255 OVER SERIAL AT ONCE dues to serial buffer size
+# Max bytes to send over to the Arduino at one time. We send 224 bytes because it is
+# a multiple of 32, the size of our our FIFO buffer on the nRF24L01+ chip, and it still
+# fits within our serial's buffer, which has a capacity of 224 hex chars.
+MAX_HEX_CHUNK_BYTES = 224
 
 
 def handshake(ser):
     """
     Sends to the Arduino HANDSHAKE_BYTE, telling it we are about to send over data.
     Then, we wait for a confimation from Arduino that it is ready via HANDSHAKE_CHAR
-    at which point we break, signifying a successful handshake.
+    at which point we break, signifying a successful handshake.  This funciton relies
+    on handshake function included in the serial_io class on the Arduino's side of 
+    communication.
 
     We throw an error if handshake takes more than MAX_HANDSHAKE_SEC
 
@@ -78,7 +91,10 @@ def handshake(ser):
 
 def chunkGenerator(data):
     """
-    Generator to split data into chunks to be sent over serial.
+    Generator to split data into chunks to be sent over serial.  We cannot fit
+    all the data on the Arduino at once, which is why we have to split it up
+    like this.  Data is read over serial on the Arduino's side and fills the
+    file_chunk buffer via the setFromSerial function (both within serial_io).
 
     Params:
         data:
@@ -123,14 +139,7 @@ def printData(ser, end_char='\n'):
  
 
 if __name__ == "__main__":
-    
-    # We are going to store the configured integers in our Arduino in a Union, 
-    # by sending over our individal bytes and storing them in memory.  
-    # Thus, we need to consider the endianess of our Arduino
-    ENDIANESS = 'little'
 
-    # size of char array in union representing extension on Arduino
-    EXTENSION_LEN = 10
 
     # TODO: send over size of hex as checksum if have time
     raw_hex_bytes = bytearray()  # our file to be sent
@@ -161,27 +170,25 @@ if __name__ == "__main__":
     handshake(ser)
 
     # send over the extension and its contents one byte at a time
-    ser.write(file_extension_bytes)
-
-    for _ in range(3):
-        printData(ser)      
+    ser.write(file_extension_bytes)   
     
+    printData(ser)
+    printData(ser)
+    printData(ser)
+    
+    # precaution to make sure we are only sending file data over Serial
     handshake(ser)
     chunks = chunkGenerator(raw_hex_bytes)
     for c in chunks:
         # time.sleep(1)
-        # handshake(ser)
         total = len(c) 
         total = total.to_bytes(1, byteorder=ENDIANESS)
         ser.write(total)
 
-         
-
         # time.sleep(1)
-        # handshake(ser)
         ser.write(c)
 
         # printData(ser)
-        printData(ser, '') 
+        printData(ser, '') #output our received file
     
     ser.close()

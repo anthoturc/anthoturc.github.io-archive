@@ -14,7 +14,7 @@ SerialIO io;
 volatile bool transmitting {false}; // placeholder for nRF states
 
 /* prototypes */
-void ISR_Antenna(void);
+// void ISR_Antenna(void);
 
 
 void setup() {
@@ -22,7 +22,7 @@ void setup() {
 
   /* Antenna is active low */
   pinMode(A2, PULLUP);
-  attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
+  // attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
   Serial.begin(BAUD_RATE);
   
   io.setConfig();
@@ -37,6 +37,9 @@ void loop() {
   } else {
     io.handShake();
     io.setExtension();
+    io.send(io.getChannel());
+    io.send(io.getAddressNum());
+    io.send(io.getExtension());
     io.handShake();
     io.setFileChunkSize();
 
