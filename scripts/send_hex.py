@@ -55,6 +55,9 @@ HANDSHAKE_BYTE.extend([HANDSHAKE_CHAR_BYTE])
 # fits within our serial's buffer, which has a capacity of 224 hex chars.
 MAX_HEX_CHUNK_BYTES = 224
 
+# used to debug communication
+DEBUG = 0
+
 
 def handshake(ser):
     """
@@ -77,8 +80,14 @@ def handshake(ser):
     config_string = ""
 
     start_time = time.time()
-    time.sleep(1)
-    # wait until we get confirmation from the Arduino
+    # time.sleep(1)
+
+
+   # We need two while loops because we need to remain in our
+   # hanshake state until the Arduino sends over data, but that
+   # may not happen instantly.  We also want to break out of
+   # the innermost loop the second that we have the confirmation
+   # of our handshake from the Arduino's side
     while config_string != HANDSHAKE_CHAR:
         while config_string != HANDSHAKE_CHAR and ser.in_waiting:
             config_string = ser.read(1).decode("utf-8")            
@@ -140,7 +149,6 @@ def printData(ser, end_char='\n'):
 
 if __name__ == "__main__":
 
-
     # TODO: send over size of hex as checksum if have time
     raw_hex_bytes = bytearray()  # our file to be sent
     file_extension_bytes = bytearray()  # file extension being sent over, used for decoding
@@ -172,23 +180,22 @@ if __name__ == "__main__":
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)   
     
-    printData(ser)
-    printData(ser)
-    printData(ser)
-    
     # precaution to make sure we are only sending file data over Serial
-    handshake(ser)
+    # handshake(ser)
     chunks = chunkGenerator(raw_hex_bytes)
     for c in chunks:
+ 
+        # Shake between every transaction to make sure that the Arduino
+        # is ready for our next chunk of data
+        handshake(ser)
         # time.sleep(1)
         total = len(c) 
         total = total.to_bytes(1, byteorder=ENDIANESS)
         ser.write(total)
-
         # time.sleep(1)
         ser.write(c)
-
-        # printData(ser)
-        printData(ser, '') #output our received file
+        
+        if DEBUG:
+            printData(ser, '') #output our received file
     
     ser.close()

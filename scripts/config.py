@@ -47,6 +47,10 @@ MIN_CHANNEL = 0
 MAX_ADDRESS = 10000
 MIN_ADDRESS = 0
 
+# All numbers 0-9 as strings, used for input error handling
+NUMBERS = set([str(x) for x in range(10)])
+
+
 def sendFlushSerialSignal(ser):
     """
     Sends to the Arduino HANDSHAKE_BYTE HANDSHAKE_REPS times.  On the Arduino side, this
@@ -65,6 +69,24 @@ def sendFlushSerialSignal(ser):
     flush_signal.extend([HANDSHAKE_CHAR_BYTE for _ in range(HANDSHAKE_REPS)])
     ser.write(flush_signal)
 
+
+def getIntInput():
+    """
+    Returns -1 if our input is not an integer, and the input if it is an integer.
+
+    Params:
+        None
+    
+    Outputs:
+        int
+    """
+    int_input = input()
+    if not int_input or not all([i in NUMBERS for i in int_input]):
+        int_input = -1
+
+    return int(int_input)
+
+
 if __name__ == "__main__":
 
     # init pipe and channel to out of bounds
@@ -73,14 +95,14 @@ if __name__ == "__main__":
 
     print("Enter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
     while not (MIN_CHANNEL <= channel <= MAX_CHANNEL):
-        channel = int(input())
+        channel = getIntInput()
         if not (MIN_CHANNEL <= channel <= MAX_CHANNEL):
             print("Invalid input. Re-enter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
     
     print("Enter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
     while not (MIN_ADDRESS <= address <= MAX_ADDRESS):
-        address = int(input())
-        if not (MIN_ADDRESS <= channel <= MAX_ADDRESS):
+        address = getIntInput()
+        if not (MIN_ADDRESS <= address <= MAX_ADDRESS):
             print("Invalid input. Re-enter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
 
     # configuring our serial

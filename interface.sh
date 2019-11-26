@@ -31,22 +31,22 @@ fi
 # we use the while loop to allow users to transmit more than once
 file_path=""
 while [ "$file_path" != "q" ]; do
-	printf "\nCurrently Receiving...\nEnter absolute file path to send message or q to quit: \n"
+	printf "\n\nCurrently Receiving...\nEnter absolute file path to send message or q to quit: \n"
+
+	# python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
 	read file_path
 
-	if [[ -e "$file_path" ]]; then
+	if [[ -e "$file_path" ]] && [[ ! -d "$file_path" ]]; then
 
 		# if our file exits, we convert it to raw hex and send
 		raw_hex=$(xxd -p $file_path)
 		if [ "$file_path" != "q" ]; then
-			printf "\nCurrently Transmitting... Please wait...\n"
-			# python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
+			printf "\n\nCurrently Transmitting... Please wait..."
 			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex"
-			# want to check if interrupt was gennerated on pin...
 			printf "\nSent!\n"
 		fi
 	elif [ "$file_path" != "q" ]; then
-		printf "\nFile does not exist. Try again."
+		printf "File does not exist. Try again.\n"
 	fi	
 done
 printf "\nGoodbye!\n"

@@ -86,11 +86,20 @@ SerialIO::setFromSerial(char * toSet, uint32_t size)
   char curr_char;
   uint32_t sent_bytes {0};
 
-  while (sent_bytes < size && Serial.available()) {
-    curr_char = (char) (Serial.read());
-    *toSet = curr_char;
-    toSet++;
-    sent_bytes++;
+  /*
+   * We need two while loops because we need to remain in our
+   * setting state until the computer sends over data, but that
+   * may not happen instantly.  We also want to break out of
+   * the innermost loop the second that we have all the data 
+   * we need.
+   */
+  while (sent_bytes < size) {
+    while (sent_bytes < size && Serial.available()) {
+      curr_char = (char) (Serial.read());
+      *toSet = curr_char;
+      toSet++;
+      sent_bytes++;
+    }
   }
 }
 
@@ -110,6 +119,7 @@ SerialIO::setFromSerial(uint8_t * toSet, uint32_t size)
   uint8_t curr_byte;
   uint32_t sent_bytes {0};
 
+  /* For 2 loop reasoning, see setFromSerial(char *, uint32_t)  */
   while (sent_bytes < size) {
     while (sent_bytes < size && Serial.available()) {
       curr_byte = (uint8_t) (Serial.read());
@@ -239,7 +249,7 @@ SerialIO::handShake()
 {
   char curr_char {'a'}; // arbirary initiallization != CONFIRMATION_CHAR
 
-  /* stay in while loop until computer says it is ready */
+  /* For 2 loop reasoning, see setFromSerial(char *, uint32_t)  */
   while (curr_char != CONFIRMATION_CHAR) {
     while (curr_char != CONFIRMATION_CHAR && Serial.available()) {
       curr_char = (char) (Serial.read());
@@ -248,7 +258,7 @@ SerialIO::handShake()
 
   #if 0
   /* sleep first so that both computer and Arduino not listening at same time */
-  sleep(1);
+  // sleep(1);
   #endif 
 
   /* now tell the computer that we are ready too */
@@ -266,6 +276,7 @@ SerialIO::flushSerial()
   uint8_t curr_byte;
   uint8_t serial_flush_count {0};
   
+  /* For 2 loop reasoning, see setFromSerial(char *, uint32_t)  */
   while (serial_flush_count < FLUSH_COUNT) {
     while (serial_flush_count < FLUSH_COUNT && Serial.available()) {
       curr_byte = (uint8_t) (Serial.read());
