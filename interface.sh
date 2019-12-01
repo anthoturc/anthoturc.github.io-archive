@@ -28,12 +28,13 @@ if [[ ! -e "$LOG_PATH" ]]; then
 	mkdir ./logs/
 fi
 
+# receiving
+python3 ./scripts/receive_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE -W 2> ./logs/error-log-rx.txt
+
 # we use the while loop to allow users to transmit more than once
 file_path=""
 while [ "$file_path" != "q" ]; do
-	printf "\n\nCurrently Receiving...\nEnter absolute file path to send message or q to quit: \n"
-
-	# python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -u -W > ./logs/received.txt 2> ./logs/errorlog.txt
+	printf "\n\nCurrently Transmitting...\nEnter absolute file path to send message or q to quit: \n"
 	read file_path
 
 	if [[ -e "$file_path" ]] && [[ ! -d "$file_path" ]]; then
@@ -41,8 +42,8 @@ while [ "$file_path" != "q" ]; do
 		# if our file exits, we convert it to raw hex and send
 		raw_hex=$(xxd -p $file_path)
 		if [ "$file_path" != "q" ]; then
-			printf "\n\nCurrently Transmitting... Please wait..."
-			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex"
+			printf "\n\nSending File... Please wait..."
+			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -W 2> ./logs/error-log-tx.txt
 			printf "\nSent!\n"
 		fi
 	elif [ "$file_path" != "q" ]; then

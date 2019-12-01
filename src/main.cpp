@@ -27,6 +27,7 @@ void setup() {
   Serial.begin(BAUD_RATE);
   
   io.setConfig();
+
 }
 
 void loop() {
@@ -34,7 +35,7 @@ void loop() {
   /* THIS SHOULD BE DONE WITH NRF STATE IN CLASS */
   if (!transmitting) {
     // nRF receiving
-
+    
     /* THIS SHOULD BE DONE WITH NRF STATE IN CLASS */
     transmitting = true;
   } else {
