@@ -57,8 +57,8 @@ nRF24::setToTransmitter()
     /* send to standby mode */
     digitalWrite(cePin_, LOW);
     /* flush the fifo! */
-
-    /* set the PRIM_RX field to 0 */
+    flushTXPayload();
+    /* set the PRIM_TX field to 0 */
     byte data = 0b11111110;
     setRegister(CONFIG, (getRegister(CONFIG) & data));
     digitalWrite(cePin_, HIGH);
@@ -97,7 +97,7 @@ nRF24::readSPI(byte * arr, uint32_t size)
 }
 
 void
-nRF24::writeSPI(byte * arr, uint32_t size)
+nRF24::writeSPI(char * arr, uint32_t size)
 {
     beginTransaction();
     
@@ -112,8 +112,10 @@ nRF24::writeSPI(byte * arr, uint32_t size)
     for (int i = 0; i < size; ++i) {
         SPI.transfer(arr[i]);
     }
-    
+    delay(100);
     endTransaction();
+
+    flushTXPayload();
 }
 
 void 
@@ -121,29 +123,13 @@ nRF24::setChannel(uint8_t channel)
 {
     if (channel > NUM_CHANNELS || channel < 0) channel = 0;
 
-    setRegister(RF_CH, (getRegister(RF_CH) | channel));
+    setRegister(RF_CH, channel);
 }
 
 uint8_t 
 nRF24::getChannel()
 {
     return getRegister(RF_CH);
-}
-
-uint8_t 
-nRF24::getChannel()
-{
-    SPI.beginTransaction(SPI_SETTINGS);
-    digitalWrite(csnPin_, LOW);
-
-    data_frame_u df = makeFrame(R_REGISTER | RF_CH, NO_DATA);
-    uint16_t data =SPI.transfer16(df.data_frame);
-    
-
-    SPI.endTransaction();
-    digitalWrite(csnPin_, HIGH);
-
-    return ((data << 8) >> 8);
 }
 
 void 
@@ -207,6 +193,26 @@ nRF24::makeFrame(uint8_t cmd, byte data)
 }
 
 void
+nRF24::setWritingAddress(uint8_t * address)
+{
+    beginTransaction();
+
+    data_frame_u df = makeFrame((W_REGISTER | (REGISTER_MASK & TX_ADDR)), NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+    int i = 0;
+    
+    for (; i < addressWidth_; ++i) {
+        SPI.transfer(address[i]);
+    }
+
+    for (i = addressWidth_; i < MAX_ADDRESS_WIDTH; ++i) {
+        SPI.transfer(NO_DATA);
+    }
+
+    endTransaction();
+}
+
+void
 nRF24::flushPayload(uint8_t cmd)
 {
     beginTransaction();
@@ -239,7 +245,10 @@ nRF24::setAddressWidth(uint8_t aw)
     /* only allow ADDRESS_WIDTH bytes to be sent over */
     if (aw > MAX_ADDRESS_WIDTH || aw < MIN_ADDRESS_WIDTH) aw = MIN_ADDRESS_WIDTH;
     addressWidth_ = aw;
-    setRegister(SETUP_AW, (getRegister(SETUP_AW) | aw));
+    // making sure that aw is formatted correctly
+    // to match the data sheet definition
+    aw = 0b11111100 & (0b11111100 | (aw-2));  
+    setRegister(SETUP_AW, (getRegister(SETUP_AW) & aw));
 }
 
 void 
@@ -293,15 +302,15 @@ nRF24::getRegister(uint8_t r)
     beginTransaction();
 
     data_frame_u df = makeFrame(R_REGISTER | (REGISTER_MASK & r), NO_DATA);
-    uint16_t result = SPI.transfer16(df.data_frame);
-
+    SPI.transfer(df.atomic_frame.preamble);
+    uint8_t result = SPI.transfer(NO_DATA);
     endTransaction();
 
 #if DEBUG
     GET_VAL_16BIT(result)
 #endif
     
-    return (result << sizeof(uint8_t)) >> sizeof(uint8_t);
+    return result;
 }
 
 void 
@@ -316,4 +325,18 @@ nRF24::endTransaction()
 {
     SPI.endTransaction();
     digitalWrite(csnPin_, HIGH);
+}
+
+
+void 
+nRF24::getWritingAddress(uint8_t * buff)
+{    
+    beginTransaction();
+
+    data_frame_u df = makeFrame(R_REGISTER | (REGISTER_MASK & TX_ADDR), NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+    for (int i = 0; i < addressWidth_; ++i) {
+        buff[i] = SPI.transfer(NO_DATA);
+    }
+    endTransaction();
 }
