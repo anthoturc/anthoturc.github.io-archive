@@ -355,3 +355,10 @@ SerialIO::send(char * data)
   Serial.print(data);
   Serial.print(HANDSHAKE_CHAR);
 }
+
+void
+SerialIO::send(char data) 
+{
+  Serial.print(data);
+  Serial.print(HANDSHAKE_CHAR);
+}

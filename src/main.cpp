@@ -8,10 +8,14 @@
 #define CSN 25
 #define DEBUG 1
 
+#if DEBUG
+char * EXT = "cpp";
+char * F = "23696e636c756465203c41726475696e6f2e683e0a23696e636c75646520\n3c5350492e683e0a23696e636c756465203c737464696e742e683e0a2369\n6e636c75646520226e524632344c30312e68220a23696e636c7564652022\n73657269616c5f696f2e68220a0a23646566696e652043452032360a2364\n6566696e652043534e2032350a23646566696e6520444542554720310a0a\n2369662044454255470a63686172202a20455854203d2022637070223b0a\n63686172202a2046494c45203d2022617364666173223b0a23656e646966\n0a0a2f2f202f2a2063726561746520616e20696e7374616e6365206f6620\n74686520726164696f202a2f0a6e524632344d6f64756c653a3a6e524632\n3420726164696f2843452c2043534e293b0a53657269616c494f20696f3b\n0a0a0a766f69642073657475702829207b0a20205350492e626567696e28\n293b0a202053657269616c2e626567696e28424155445f52415445293b0a\n7d0a0a0a766f6964206c6f6f702829207b0a2020696f2e736574436f6e66\n696728293b0a0a2020236966202144454255470a20202f2a20657874656e\n73696f6e206669727374207468696e6720746f2062652073656e74202a2f\n0a2020696f2e68616e647368616b6528293b0a2020696f2e73656e642869\n6f2e676574457874656e73696f6e2829293b0a20200a20202f2f20574849\n4c452e2e2e0a20202f2a206c697374656e20616e642066696c6c2066726f\n6d20726164696f20756e74696c207370656369616c206368617220726563\n6569766564202a2f0a2020696f2e68616e647368616b6528293b0a202069\n6f2e73656e6428696f2e67657446696c654368756e6b2829293b0a202023\n656e6469660a0a20202369662044454255470a2020696f2e68616e647368\n616b6528293b0a2020696f2e73656e6428455854293b0a20200a2020696f\n2e68616e647368616b6528293b0a2020696f2e73656e642846494c45293b\n0a202023656e6469660a0a2020696f2e68616e647368616b6528293b0a20\n20696f2e73656e6428454e445f43484152293b202f2f207472616e736d69\n7373696f6e206f7665720a7d0a";
+#endif
+
 // /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
 SerialIO io;
-bool conf = false;
 
 
 void setup() {
@@ -23,39 +27,25 @@ void setup() {
 void loop() {
   io.setConfig();
 
+  #if !DEBUG
+  /* extension first thing to be sent */
   io.handshake();
-  io.setExtension();
-
-  /* 
-    * Shake between every transaction to make signify to the computer that we are
-    * ready for our next chunk of data
-    */
+  io.send(io.getExtension());
+  
+  // WHILE...
+  /* listen and fill from radio until special char received */
   io.handshake();
-  io.setFileChunkSize();
-
-  /* 
-  * We keep filling and sending our chunks until we do not have enough bytes to
-  * full our entire chunk array, at which point we break the while loop,
-  * reset our array, and send the reamining bit of our file
-  */
-  while (io.getFileChunkSize() == MAX_CHUNK_CHARS) {
-    io.setFileChunk();
-
-    #if DEBUG
-    io.send(io.getFileChunk());
-    #endif
-
-    /* SEND DATA OVER RADIO AND USE INTERUPT TO CONFIRM READY? */
-
-    io.handshake();  // shake between every transaction
-    io.setFileChunkSize();
-  }
-  io.emptyFileChunk();
-  io.setFileChunk();
-
-  #if DEBUG
   io.send(io.getFileChunk());
   #endif
 
-  io.softReset();
+  #if DEBUG
+  io.handshake();
+  io.send(EXT);
+  
+  io.handshake();
+  io.send(F);
+  #endif
+
+  io.handshake();
+  io.send(END_CHAR); // transmission over
 }

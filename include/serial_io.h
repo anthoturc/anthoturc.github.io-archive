@@ -22,6 +22,7 @@
 #define EXTENSION_BYTES 10    // expected bytes in our file extension
 #define BAUD_RATE 115200      // for serial communication
 #define HANDSHAKE_CHAR '\t'   // used to communicate state changes between the Arduino and Computer
+#define END_CHAR '}'          // signify the end of transmission
 #define TX_CHAR '~'           // at_cmd UART char with matching counterpart in Python receive_hex script 
 #define TX_CHAR_REPS 1        // necessary reps of at_cmd char over UART to trigger at_cmd UART interrupt
 
@@ -93,6 +94,7 @@ public:
 
   /* Arduino -> Computer */
   void send(char *);
+  void send(char);
   void send(uint8_t);
   void send(uint32_t);
 
