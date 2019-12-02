@@ -88,6 +88,9 @@
 #define UART_AT_CMD_POSTCNT_REG  *reinterpret_cast<uint32_t *>(0x3FF4004C)
 #define UART_AT_CMD_GAPTOUT_REG  *reinterpret_cast<uint32_t *>(0x3FF40050)
 #define UART_AT_CMD_CHAR_REG     *reinterpret_cast<uint32_t *>(0X3FF40054)
+#define UART_INT_RAW_REG          *reinterpret_cast<uint32_t *>(0x3FF40004)
 #define UART_INT_ST_REG          *reinterpret_cast<uint32_t *>(0x3FF40008)
 #define UART_INT_ENA_REG         *reinterpret_cast<uint32_t *>(0x3FF4000C)
 #define UART_INT_CLR_REG         *reinterpret_cast<uint32_t *>(0x3FF40010)
+
+#define PIDCTRL_INTERRUPT_ENABLE_REG *reinterpret_cast<uint32_t *>(0x3FF1F000)
