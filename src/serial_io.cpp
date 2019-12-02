@@ -68,6 +68,20 @@ SerialIO::getFileChunkSize(void)
   return next_chunk_size;
 }
 
+/*
+ * Gets the expected state of the radio (either tx or rx) as determined by the raw
+ * at_cmd interrupt flag
+ * 
+ * Outputs:
+ *  TX_MODE == 1 if Arduino expects the radio to be in rx mode
+ *  RX_MODE == 0 if Arduino expects the radio to be in tx mode
+ */
+uint8_t
+SerialIO::getExpectedRadioState() 
+{
+  return (UART_INT_RAW_REG & (1 << UART_AT_CMD_CHAR_DET_INT_CLR_BIT)) >> UART_AT_CMD_CHAR_DET_INT_CLR_BIT;
+}
+
 
 /* -----Setters----- */
 
@@ -142,7 +156,7 @@ SerialIO::setFromSerial(uint8_t * toSet, uint32_t size)
  * into account in config.py script.
  */
 void 
-SerialIO::setConfig() 
+SerialIO::setConfig(char c, uint8_t reps) 
 {
   while (board_state == CONFIG) {
     switch (serial_state) {
@@ -160,7 +174,9 @@ SerialIO::setConfig()
     default:
       break;
     }
-  }   
+  } 
+
+  configAtCmdCharInterrupt(c, reps);
 }
 
 /*
@@ -288,6 +304,31 @@ SerialIO::flushSerial()
       }
     }
   }
+}
+
+/*
+ * Clears the UART interrupt flag of an interrupt specified by bit number of UART_INT_CLR_REG
+ */
+void 
+SerialIO::clearInterruptUART(uint8_t bit) {
+  UART_INT_CLR_REG |= (1 << bit);
+}
+
+/*
+ * Configures the at_cmd interrupt, which, on a high level, is flagged when a predefined character is
+ * sent over UART a predefined number of times with sufficient space in between each each transmission.
+ * 
+ * Params:
+ *  c: 
+ *    our at_cmd character
+ *  reps:
+ *    number of reps needed to determine if we should flag the interrupt
+ */
+void
+SerialIO::configAtCmdCharInterrupt(char c, uint8_t reps) 
+{
+  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_CHAR_NUM_MASK) | (reps << UART_CHAR_NUM_BIT);
+  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_AT_CMD_CHAR_MASK) | c;
 }
 
 

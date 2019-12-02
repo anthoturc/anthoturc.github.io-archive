@@ -5,7 +5,6 @@
 #include "serial_io.h"
 #include "esp32AtCmdUART.h"
 
-// // #define BAUD_RATE 115200
 #define CE 26
 #define CSN 25
 #define DEBUG 1
@@ -18,17 +17,18 @@ SerialIO io;
 void setup() {
   SPI.begin();
   Serial.begin(BAUD_RATE);
-  // io.setConfig();
+  io.setConfig(TX_CHAR_REPS, TX_CHAR);
 
-  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_CHAR_NUM_MASK) | (TX_CHAR_REPS << UART_CHAR_NUM_BIT);
-  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_AT_CMD_CHAR_MASK) | TX_CHAR;
+  // UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_CHAR_NUM_MASK) | (TX_CHAR_REPS << UART_CHAR_NUM_BIT);
+  // UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_AT_CMD_CHAR_MASK) | TX_CHAR;
+  UART_AT_CMD_PRECNT_REG = (UART_PRE_IDLE_NUM_MASK & ~UART_AT_CMD_CHAR_MASK) | 0x0;
+  UART_AT_CMD_POSTCNT_REG = (UART_POST_IDLE_NUM_MASK & ~UART_AT_CMD_CHAR_MASK) | 0x0;
 }
 
 
 void loop() {
-  if (!((UART_INT_RAW_REG & (1 << UART_AT_CMD_CHAR_DET_INT_CLR_BIT)) >> UART_AT_CMD_CHAR_DET_INT_CLR_BIT)) {
+  if (io.getExpectedRadioState() == RX_MODE) {
 
-    // nRF receiving
     // while available from radio:
       // io.handShake();
       // io.send(transmission);
@@ -70,6 +70,7 @@ void loop() {
 
     io.softReset();
 
-    UART_INT_CLR_REG |= (1 << UART_AT_CMD_CHAR_DET_INT_CLR_BIT);  // transmitting == false
+    /* change getExpectedRadioState to RX_MODE */
+    io.clearInterruptUART(UART_AT_CMD_CHAR_DET_INT_CLR_BIT);
   }
 }

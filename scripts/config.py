@@ -26,7 +26,7 @@ Sends:
 
 import sys
 import serial
-from arduino_serial_io import (MIN_CHANNEL, MAX_CHANNEL, MIN_ADDRESS,
+from arduino_serial_io import (MIN_CHANNEL, MAX_CHANNEL, MIN_ADDRESS, enableTX,
                                MAX_ADDRESS, ENDIANESS, getIntInput, flushSerial)
 
 if __name__ == "__main__":
@@ -59,5 +59,6 @@ if __name__ == "__main__":
     address = address.to_bytes(4, byteorder=ENDIANESS)
     ser.write(channel)
     ser.write(address)
+    # enableTX(ser)
 
     ser.close()

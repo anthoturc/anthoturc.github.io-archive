@@ -31,10 +31,12 @@ if __name__ == "__main__":
         print("Currently Receiving...\nEnter tx to transmit: ")
         mode_input = input()
     
-    print("sent")
+    
     enableTX(ser)
+    print("sent")
 
-
-    # printData(ser, '') #output our received file
+    # while true:
+    #     handshake()
+    #     printData(ser, '') #output our received file
     
     ser.close()
