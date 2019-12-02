@@ -1,7 +1,8 @@
 #!/bin/python3
 """
-When run in main, the script will record and send over the raw hex and file extension
-of a previously specified file to a connected Arduino for RF file transfers.
+When run in main, the script will record and send over the user's
+desired communication configurations and a file in the form of raw hex 
+and its file extension to a connected Arduino for RF file transfers.
 
 Params:
     sys.argv[1]:
@@ -17,6 +18,12 @@ Params:
         Plain raw-hex string of file to send
 
 Sends:
+    channel:
+        0-125
+        
+    address:
+        0-10000
+
     file_extension_bytes:
         File extension of our sent file
 
@@ -24,9 +31,11 @@ Sends:
         Raw-hex of our file
 
 """
+
+
 import sys
 import serial
-from arduino_serial_io import EXTENSION_LEN, ENDIANESS, handshake, chunkGenerator, printData
+from arduino_serial_io import *
 
 # used to debug communication
 DEBUG = 1
@@ -36,12 +45,6 @@ if __name__ == "__main__":
     raw_hex_bytes = bytearray()  # our file to be sent
     file_extension_bytes = bytearray()  # file extension being sent over, used for decoding
     file_extension = []
-
-    # configuring our serial
-    ser = serial.Serial()
-    ser.port = sys.argv[1]
-    ser.baudrate = int(sys.argv[2])
-    ser.open()
 
     # Translation:
     #   1) .split('.')[1] means take everything after the . of our file path
@@ -57,6 +60,39 @@ if __name__ == "__main__":
     file_extension_bytes.extend(file_extension)
     raw_hex_bytes.extend(map(ord, sys.argv[4]))
 
+    # init pipe and channel to out of bounds
+    channel = -1
+    address = -1
+
+    print("\nEnter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
+    while not MIN_CHANNEL <= channel <= MAX_CHANNEL:
+        channel = getIntInput()
+        if not MIN_CHANNEL <= channel <= MAX_CHANNEL:
+            print("Invalid input. Re-enter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
+
+    print("\nEnter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
+    while not MIN_ADDRESS <= address <= MAX_ADDRESS:
+        address = getIntInput()
+        if not MIN_ADDRESS <= address <= MAX_ADDRESS:
+            print("Invalid input. Re-enter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
+
+    channel = channel.to_bytes(1, byteorder=ENDIANESS)
+    address = address.to_bytes(4, byteorder=ENDIANESS)
+
+    print("\nSending file please wait...")
+
+    # configuring our serial
+    ser = serial.Serial()
+    ser.port = sys.argv[1]
+    ser.baudrate = int(sys.argv[2])
+    ser.open()
+
+    flushSerial(ser)
+
+    # sending over our configurations
+    ser.write(channel)
+    ser.write(address)
+    
     # initialte communication with the Arduino
     handshake(ser)
 

@@ -78,7 +78,7 @@ public:
   /* Setters */
   void setFromSerial(char *, uint32_t);
   void setFromSerial(uint8_t *, uint32_t);
-  void setConfig(char, uint8_t);
+  void setConfig();
   void setExtension(void);
   void setFileChunkSize(void);
   void setFileChunk(void);

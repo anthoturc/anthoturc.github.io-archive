@@ -156,7 +156,7 @@ SerialIO::setFromSerial(uint8_t * toSet, uint32_t size)
  * into account in config.py script.
  */
 void 
-SerialIO::setConfig(char c, uint8_t reps) 
+SerialIO::setConfig() 
 {
   while (board_state == CONFIG) {
     switch (serial_state) {
@@ -175,8 +175,6 @@ SerialIO::setConfig(char c, uint8_t reps)
       break;
     }
   } 
-
-  configAtCmdCharInterrupt(c, reps);
 }
 
 /*
