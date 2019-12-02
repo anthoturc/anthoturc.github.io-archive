@@ -14,7 +14,7 @@
  * 
  * Default: 0x0186A00
  */
-#define UART_PRE_IDLE_NUM 0xffffff
+#define UART_PRE_IDLE_NUM_MASK 0xffffff
 
 /* 
  * In UART_AT_CMD_POSTCNT_REG register:
@@ -24,7 +24,7 @@
  * 
  * Default: 0x0186A00
  */
-#define UART_POST_IDLE_NUM 0xffffff
+#define UART_POST_IDLE_NUM_MASK 0xffffff
 
 /* 
  * In UART_AT_CMD_GAPTOUT_REG register:
@@ -35,7 +35,7 @@
  * 
  * Default: 0x0001E00
  */
-#define UART_RX_GAP_TOUT 0xffffff
+#define UART_RX_GAP_TOUT_MASK 0xffffff
 
 /* 
  * In UART_AT_CMD_CHAR_REG register:
@@ -45,7 +45,8 @@
  * 
  * Default: 0x003
  */
-#define UART_CHAR_NUM 0xff00
+#define UART_CHAR_NUM_MASK 0xff00
+#define UART_CHAR_NUM_BIT 8 // for bit shifting new inputs
 
 /* 
  * In UART_AT_CMD_CHAR_REG register:
@@ -55,7 +56,7 @@
  * 
  * Default: 0x02B
  */
-#define UART_AT_CMD_CHAR 0xff
+#define UART_AT_CMD_CHAR_MASK 0xff
 
 /* 
  * In UART_INT_ST_REG register:
@@ -63,7 +64,7 @@
  * 
  * Default: 0
  */
-#define UART_AT_CMD_CHAR_DET_INT_ST 18
+#define UART_AT_CMD_CHAR_DET_INT_ST_BIT 18
 
 /* 
  * In UART_INT_ENA_REG register:
@@ -71,7 +72,7 @@
  * 
  * Default: 0
  */
-#define UART_AT_CMD_CHAR_DET_INT_ENA 18
+#define UART_AT_CMD_CHAR_DET_INT_ENA_BIT 18
 
 /* 
  * In UART_INT_CLR_REG register:
@@ -79,18 +80,14 @@
  * 
  * Default: 0
  */
-#define UART_AT_CMD_CHAR_DET_INT_CLR 18
+#define UART_AT_CMD_CHAR_DET_INT_CLR_BIT 18
 
 
-namespace atCmdUART {
-    /* AT escape sequence detection configuration */
-    enum registers {
-        UART_AT_CMD_PRECNT_REG  = 0x3FF40048,
-        UART_AT_CMD_POSTCNT_REG = 0x3FF4004C,
-        UART_AT_CMD_GAPTOUT_REG = 0x3FF40050,
-        UART_AT_CMD_CHAR_REG    = 0X3FF50054,
-        UART_INT_ST_REG         = 0x3FF40008,
-        UART_INT_ENA_REG        = 0x3FF4000C,
-        UART_INT_CLR_REG        = 0x3FF40010,
-    };
-}
+/* pointers to important registers */
+#define UART_AT_CMD_PRECNT_REG   *reinterpret_cast<uint32_t *>(0x3FF40048)
+#define UART_AT_CMD_POSTCNT_REG  *reinterpret_cast<uint32_t *>(0x3FF4004C)
+#define UART_AT_CMD_GAPTOUT_REG  *reinterpret_cast<uint32_t *>(0x3FF40050)
+#define UART_AT_CMD_CHAR_REG     *reinterpret_cast<uint32_t *>(0X3FF40054)
+#define UART_INT_ST_REG          *reinterpret_cast<uint32_t *>(0x3FF40008)
+#define UART_INT_ENA_REG         *reinterpret_cast<uint32_t *>(0x3FF4000C)
+#define UART_INT_CLR_REG         *reinterpret_cast<uint32_t *>(0x3FF40010)

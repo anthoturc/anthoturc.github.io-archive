@@ -21,7 +21,8 @@ MIN_ADDRESS = 0
 # used to communicate state changes between the Arduino and Computer
 HANDSHAKE_CHAR = '\t'
 
-# used to communicate state changes between the Arduino and Computer
+END_CHAR = '}'
+
 TX_CHAR = '~'
 
 # Max amount of time to wait duing our handshake before we throw and exception
@@ -88,15 +89,15 @@ def getIntInput():
     return int(int_input)
 
 
-def handshakeTX(ser):
+def handshake(ser):
     """
     Sends to the Arduino HANDSHAKE_BYTE, telling it we are about to send over data.
     Then, we wait for a confimation from Arduino that it is ready via HANDSHAKE_CHAR
-    at which point we break, signifying a successful handshakeTX.  This funciton relies
-    on handshakeTX function included in the serial_io class on the Arduino's side of
+    at which point we break, signifying a successful handshake.  This funciton relies
+    on handshake function included in the serial_io class on the Arduino's side of
     communication.
 
-    We throw an error if handshakeTX takes more than MAX_HANDSHAKE_SEC
+    We throw an error if handshake takes more than MAX_HANDSHAKE_SEC
 
     Params:
         ser:
@@ -113,7 +114,7 @@ def handshakeTX(ser):
    # hanshake state until the Arduino sends over data, but that
    # may not happen instantly.  We also want to break out of
    # the innermost loop the second that we have the confirmation
-   # of our handshakeTX from the Arduino's side
+   # of our handshake from the Arduino's side
     while curr != HANDSHAKE_CHAR:
         while curr != HANDSHAKE_CHAR and ser.in_waiting:
             curr = ser.read(1).decode("utf-8")
@@ -162,12 +163,6 @@ def enableTX(ser):
     ser.write(TX_BYTE)
 
 
-def handshakeRX(ser):
-    """
-
-    """
-
-
 def printData(ser, end_char='\n'):
     """
     Prints data sent to the computer from the Arduino over seral.
@@ -190,4 +185,9 @@ def printData(ser, end_char='\n'):
             data += curr
             curr = ser.read(1).decode("utf-8")
 
+    if curr == END_CHAR:
+        return 1
+
     print(data, end=end_char)
+
+    return 0

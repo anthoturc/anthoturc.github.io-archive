@@ -20,7 +20,9 @@
 #define MAX_CHUNK_CHARS 224 // given by the size of our Serial buffer
 #define EXTENSION_BYTES 10 // expected bytes in our file extension
 #define BAUD_RATE 115200
-#define CONFIRMATION_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
+#define HANDSHAKE_CHAR '\t'  // used to communicate state changes between the Arduino and Computer
+#define TX_CHAR 0x7e
+#define TX_CHAR_REPS 1
 
 
 /*
@@ -79,7 +81,7 @@ public:
   void softReset(void);
 
   /* Auxillary Functions */
-  void handShakeTX(void);
+  void handshake(void);
   void flushSerial(void);
 
   /* Arduino -> Computer */

@@ -13,7 +13,7 @@ Params:
 import sys
 import serial
 import time
-from arduino_serial_io import *
+from arduino_serial_io import enableTX
  
 # used to debug communication
 DEBUG = 1
@@ -26,6 +26,14 @@ if __name__ == "__main__":
     ser.baudrate = int(sys.argv[2])
     ser.open()
     
+    mode_input = ""
+    while mode_input != "tx":
+        print("Currently Receiving...\nEnter tx to transmit: ")
+        mode_input = input()
+    
+    print("sent")
+    enableTX(ser)
+
 
     # printData(ser, '') #output our received file
     

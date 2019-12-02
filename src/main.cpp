@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include "nRF24L01.h"
 #include "serial_io.h"
+#include "esp32AtCmdUART.h"
 
 // // #define BAUD_RATE 115200
 #define CE 26
@@ -14,9 +15,16 @@ nRF24Module::nRF24 radio(CE, CSN);
 SerialIO io;
 volatile bool transmitting {false}; // placeholder for nRF states
 
+int itt {0};
+
 /* prototypes */
 // void ISR_Antenna(void);
 
+void IRAM_ATTR poop() {
+  Serial.println("poop");
+  // UART_INT_CLR_REG &= (0 << UART_INT_CLR_REG);
+
+}
 
 void setup() {
   SPI.begin();
@@ -25,28 +33,38 @@ void setup() {
   pinMode(A2, PULLUP);
   // attachInterrupt(digitalPinToInterrupt(A2), ISR_Antenna, RISING);
   Serial.begin(BAUD_RATE);
-  
-  io.setConfig();
+  // io.setConfig();
 
+  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_CHAR_NUM_MASK) | (TX_CHAR_REPS << UART_CHAR_NUM_BIT);
+  UART_AT_CMD_CHAR_REG = (UART_AT_CMD_CHAR_REG & ~UART_AT_CMD_CHAR_MASK) | TX_CHAR;
+  UART_INT_ENA_REG |= (1 << UART_AT_CMD_CHAR_DET_INT_ENA_BIT);
+  attachInterrupt(16, poop, CHANGE);
+  
 }
+
 
 void loop() {
 
   /* THIS SHOULD BE DONE WITH NRF STATE IN CLASS */
   if (!transmitting) {
+    Serial.println(itt++);
+
     // nRF receiving
+    // while available from radio:
+      // io.handShake();
+      // io.send(transmission);
     
     /* THIS SHOULD BE DONE WITH NRF STATE IN CLASS */
-    transmitting = true;
+    // transmitting = true;
   } else {
-    io.handShakeTX();
+    io.handshake();
     io.setExtension();
 
     /* 
      * Shake between every transaction to make signify to the computer that we are
      * ready for our next chunk of data
      */
-    io.handShakeTX();
+    io.handshake();
     io.setFileChunkSize();
 
     /* 
@@ -63,7 +81,7 @@ void loop() {
 
       /* SEND DATA OVER RADIO AND USE INTERUPT TO CONFIRM READY? */
 
-      io.handShakeTX();  // shake between every transaction
+      io.handshake();  // shake between every transaction
       io.setFileChunkSize();
     }
     io.emptyFileChunk();
@@ -79,7 +97,6 @@ void loop() {
     transmitting = false;
   }
 }
-
 
 // /*
 //  * TODO: ISR for IRQ pin on antenna

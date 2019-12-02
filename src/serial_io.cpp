@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <stdint.h>
 #include "serial_io.h"
+#include "esp32AtCmdUART.h"
 
 SerialIO::SerialIO() {}
 
@@ -240,18 +241,18 @@ SerialIO::softReset()
 /* -----Auxillary Functions----- */
 
 /*
- * Function handShakeTX() establishes a line of communication between the computer and Arduino.
+ * Function handshake() establishes a line of communication between the computer and Arduino.
  * First, we (from the Arduino) wait for the computer to say it is ready, then we say we are 
- * ready back by sending and receiving CONFIRMATION_CHAR over serial
+ * ready back by sending and receiving HANDSHAKE_CHAR over serial
  */
 void
-SerialIO::handShakeTX()
+SerialIO::handshake()
 {
-  char curr_char {'a'}; // arbirary initiallization != CONFIRMATION_CHAR
+  char curr_char {'a'}; // arbirary initiallization != HANDSHAKE_CHAR
 
   /* For 2 loop reasoning, see setFromSerial(char *, uint32_t)  */
-  while (curr_char != CONFIRMATION_CHAR) {
-    while (curr_char != CONFIRMATION_CHAR && Serial.available()) {
+  while (curr_char != HANDSHAKE_CHAR) {
+    while (curr_char != HANDSHAKE_CHAR && Serial.available()) {
       curr_char = (char) (Serial.read());
     }
   }
@@ -262,7 +263,7 @@ SerialIO::handShakeTX()
   #endif 
 
   /* now tell the computer that we are ready too */
-  Serial.print(CONFIRMATION_CHAR);
+  Serial.print(HANDSHAKE_CHAR);
 }
 
 /*
@@ -292,26 +293,26 @@ SerialIO::flushSerial()
 
 /* ------Arduino -> Computer----- */
 /*
- * Function send() Prints over serial our data, then sends a CONFIRMATION_CHAR
+ * Function send() Prints over serial our data, then sends a HANDSHAKE_CHAR
  * to indicate that the transmission is over
  */
 void
 SerialIO::send(uint8_t data) 
 {
   Serial.print(data);
-  Serial.print(CONFIRMATION_CHAR);
+  Serial.print(HANDSHAKE_CHAR);
 }
 
 void
 SerialIO::send(uint32_t data) 
 {
   Serial.print(data);
-  Serial.print(CONFIRMATION_CHAR);
+  Serial.print(HANDSHAKE_CHAR);
 }
 
 void
 SerialIO::send(char * data) 
 {
   Serial.print(data);
-  Serial.print(CONFIRMATION_CHAR);
+  Serial.print(HANDSHAKE_CHAR);
 }

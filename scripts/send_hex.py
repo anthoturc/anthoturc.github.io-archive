@@ -26,7 +26,7 @@ Sends:
 """
 import sys
 import serial
-from arduino_serial_io import EXTENSION_LEN, ENDIANESS, handshakeTX, chunkGenerator, printData
+from arduino_serial_io import EXTENSION_LEN, ENDIANESS, handshake, chunkGenerator, printData
 
 # used to debug communication
 DEBUG = 1
@@ -58,7 +58,7 @@ if __name__ == "__main__":
     raw_hex_bytes.extend(map(ord, sys.argv[4]))
 
     # initialte communication with the Arduino
-    handshakeTX(ser)
+    handshake(ser)
 
     # send over the extension and its contents one byte at a time
     ser.write(file_extension_bytes)
@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
         # Shake between every transaction to make sure that the Arduino
         # is ready for our next chunk of data
-        handshakeTX(ser)
+        handshake(ser)
         total = len(c)
         total = total.to_bytes(1, byteorder=ENDIANESS)
         ser.write(total)
