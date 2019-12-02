@@ -92,5 +92,3 @@
 #define UART_INT_ST_REG          *reinterpret_cast<uint32_t *>(0x3FF40008)
 #define UART_INT_ENA_REG         *reinterpret_cast<uint32_t *>(0x3FF4000C)
 #define UART_INT_CLR_REG         *reinterpret_cast<uint32_t *>(0x3FF40010)
-
-#define PIDCTRL_INTERRUPT_ENABLE_REG *reinterpret_cast<uint32_t *>(0x3FF1F000)
