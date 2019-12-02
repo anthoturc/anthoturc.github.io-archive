@@ -60,24 +60,7 @@ if __name__ == "__main__":
     file_extension_bytes.extend(file_extension)
     raw_hex_bytes.extend(map(ord, sys.argv[4]))
 
-    # init pipe and channel to out of bounds
-    channel = -1
-    address = -1
-
-    print("\nEnter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
-    while not MIN_CHANNEL <= channel <= MAX_CHANNEL:
-        channel = getIntInput()
-        if not MIN_CHANNEL <= channel <= MAX_CHANNEL:
-            print("Invalid input. Re-enter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
-
-    print("\nEnter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
-    while not MIN_ADDRESS <= address <= MAX_ADDRESS:
-        address = getIntInput()
-        if not MIN_ADDRESS <= address <= MAX_ADDRESS:
-            print("Invalid input. Re-enter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
-
-    channel = channel.to_bytes(1, byteorder=ENDIANESS)
-    address = address.to_bytes(4, byteorder=ENDIANESS)
+    channel, address = setConfig()
 
     print("\nSending file please wait...")
 

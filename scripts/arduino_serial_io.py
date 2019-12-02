@@ -185,9 +185,39 @@ def printData(ser, end_char='\n'):
             data += curr
             curr = ser.read(1).decode("utf-8")
 
-    if curr == END_CHAR:
-        return 1
-
     print(data, end=end_char)
 
-    return 0
+
+def setConfig():
+    """
+    Uses user input to configure the channel and address parameters for 
+    communicaiton with Arduino
+
+    Outputs:
+        tuple: channel, address
+            channel:
+                int between 0 and 125
+            
+            address:
+                int between 0 and 10000
+    """
+    # init pipe and channel to out of bounds
+    channel = -1
+    address = -1
+
+    print("\nEnter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
+    while not MIN_CHANNEL <= channel <= MAX_CHANNEL:
+        channel = getIntInput()
+        if not MIN_CHANNEL <= channel <= MAX_CHANNEL:
+            print("Invalid input. Re-enter channel ({0}-{1}): ".format(MIN_CHANNEL, MAX_CHANNEL))
+
+    print("\nEnter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
+    while not MIN_ADDRESS <= address <= MAX_ADDRESS:
+        address = getIntInput()
+        if not MIN_ADDRESS <= address <= MAX_ADDRESS:
+            print("Invalid input. Re-enter address ({0}-{1}): ".format(MIN_ADDRESS, MAX_ADDRESS))
+
+    channel = channel.to_bytes(1, byteorder=ENDIANESS)
+    address = address.to_bytes(4, byteorder=ENDIANESS)
+
+    return channel, address
