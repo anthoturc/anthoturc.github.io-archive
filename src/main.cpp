@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <stdint.h>
-#include "nRF24L01.h"
+#include <RF24.h>
 #include "serial_io.h"
 
 #define CE 26
@@ -9,7 +9,7 @@
 #define DEBUG 0
 
 // /* create an instance of the radio */
-nRF24Module::nRF24 radio(CE, CSN);
+RF24 radio(CE, CSN);
 SerialIO io;
 
 
@@ -21,20 +21,20 @@ void setup() {
 
 void loop() {
   io.setConfig();
-  // radio.begin();
-  // radio.setAddressWidth(ADDRESS_BYTES);
-  // radio.setChannel(8);
-  // radio.openWritingPipe(address);
-  // radio.setPALevel(RF24_PA_HIGH);
-  // radio.setDataRate(RF24_250KBPS);
-  // radio.stopListening();
+  radio.begin();
+  radio.setAddressWidth(ADDRESS_BYTES);
+  radio.setChannel(io.getChannel());
+  radio.openWritingPipe(io.getAddressBytes());
+  radio.setPALevel(RF24_PA_HIGH);
+  radio.setDataRate(RF24_250KBPS);
+  radio.stopListening();
 
   io.handshake();
   io.setExtension();
 
   /* Send extension */
-  // radio.write(io.getExtension(), FIFO_SIZE_BYTES);
-  //   delay(1000);
+  radio.write(io.getExtension(), FIFO_SIZE_BYTES);
+  delay(1000);
 
   /* 
     * Shake between every transaction to make signify to the computer that we are
@@ -51,15 +51,16 @@ void loop() {
   while (io.getFileChunkSize() == MAX_CHUNK_CHARS) {
     io.setFileChunk();
 
-    // int i {0};
-    // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
-    //   radio.write(&(io.getFileChunk() + i), FIFO_SIZE_BYTES);
-    //   delay(1000);
-    // }
-
-    #if DEBUG
-    io.send(io.getFileChunk());
-    #endif
+    // TODO: make this a function
+    uint8_t curr_chunk_size = io.getFileChunkSize();
+    char * curr_chunk = io.getFileChunk();
+    
+    int i {0};
+    while (i < curr_chunk_size - FIFO_SIZE_BYTES) {
+      radio.write(curr_chunk + i, FIFO_SIZE_BYTES);
+      delay(1000);
+      i += FIFO_SIZE_BYTES;
+    }
 
     io.handshake();  // shake between every transaction
     io.setFileChunkSize();
@@ -67,19 +68,19 @@ void loop() {
   io.emptyFileChunk();
   io.setFileChunk();
 
-  // int i {0};
-  // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
-  //   radio.write(&(io.getFileChunk() + i), FIFO_SIZE_BYTES);
-  //   delay(1000);
-  // }
+  uint8_t curr_chunk_size = io.getFileChunkSize();
+  char * curr_chunk = io.getFileChunk();
+  
+  int i {0};
+  while (i < curr_chunk_size - FIFO_SIZE_BYTES) {
+    radio.write(curr_chunk + i, FIFO_SIZE_BYTES);
+    delay(1000);
+    i += FIFO_SIZE_BYTES;
+  }
 
-  // /* Signify that we are done to the other Arduino */
-  // radio.write(io.END_TX_CHUNK, FIFO_SIZE_BYTES);
-  // delay(1000);
-
-  #if DEBUG
-  io.send(io.getFileChunk());
-  #endif
+  /* Signify that we are done to the other Arduino */
+  radio.write(io.END_TX_CHUNK, FIFO_SIZE_BYTES);
+  delay(1000);
 
   io.softReset();
 }

@@ -20,6 +20,7 @@
 
 #define MAX_CHUNK_CHARS 224   // given by the size of our Serial buffer
 #define EXTENSION_BYTES 10    // expected bytes in our file extension
+#define FIFO_SIZE_BYTES 32
 #define BAUD_RATE 115200      // for serial communication
 #define HANDSHAKE_CHAR '\t'   // used to communicate state changes between the Arduino and Computer
 #define TX_CHAR '~'           // at_cmd UART char with matching counterpart in Python receive_hex script 
