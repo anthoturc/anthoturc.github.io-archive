@@ -78,5 +78,7 @@ if __name__ == "__main__":
 
     ser.close()
 
+    print(file)
+    print(file_extension)
     # convert the file back to its orriginal form
-    call( 'printf "' + file + '"' + " | xxd -r -p >" + RX_FILE_PATH + str(int(time.time())) + "." + file_extension, shell=True)
+    # call( 'printf "' + file + '"' + " | xxd -r -p >" + RX_FILE_PATH + str(int(time.time())) + "." + file_extension, shell=True)
