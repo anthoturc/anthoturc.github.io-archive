@@ -6,12 +6,11 @@
 
 #define CE 26
 #define CSN 25
-#define DEBUG 1
+#define DEBUG 0
 
 // /* create an instance of the radio */
 nRF24Module::nRF24 radio(CE, CSN);
 SerialIO io;
-bool conf = false;
 
 
 void setup() {
@@ -22,6 +21,13 @@ void setup() {
 
 void loop() {
   io.setConfig();
+  // radio.begin();
+  // radio.setAddressWidth(ADDRESS_BYTES);
+  // radio.setChannel(8);
+  // radio.openWritingPipe(address);
+  // radio.setPALevel(RF24_PA_HIGH);
+  // radio.setDataRate(RF24_250KBPS);
+  // radio.stopListening();
 
   io.handshake();
   io.setExtension();
@@ -40,6 +46,12 @@ void loop() {
   */
   while (io.getFileChunkSize() == MAX_CHUNK_CHARS) {
     io.setFileChunk();
+
+    // int i {0};
+    // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
+    //   radio.write(&(io.getFileChunk + i), FIFO_SIZE_BYTES);
+    //   delay(1000);
+    // }
 
     #if DEBUG
     io.send(io.getFileChunk());

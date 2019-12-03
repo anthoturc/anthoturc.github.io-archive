@@ -281,6 +281,8 @@
 #define MIN_ADDRESS_WIDTH 3
 #define MAX_ADDRESS_WIDTH 5
 
+#define FIFO_SIZE_BYTES 32
+
 /*
  * When writing to a register we take the lower 5 bits
  */

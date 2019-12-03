@@ -38,7 +38,7 @@ import serial
 from arduino_serial_io import *
 
 # used to debug communication
-DEBUG = 1
+DEBUG = 0
 
 
 if __name__ == "__main__":
