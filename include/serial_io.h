@@ -96,6 +96,7 @@ public:
   void send(uint8_t);
   void send(uint32_t);
 
+  char END_TX_CHUNK[32] {'}'};
 
 private:
   void configAtCmdCharInterrupt(char c, uint8_t reps);

@@ -57,13 +57,21 @@ void loop() {
     io.send(io.getFileChunk());
     #endif
 
-    /* SEND DATA OVER RADIO AND USE INTERUPT TO CONFIRM READY? */
-
     io.handshake();  // shake between every transaction
     io.setFileChunkSize();
   }
   io.emptyFileChunk();
   io.setFileChunk();
+
+  // int i {0};
+  // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
+  //   radio.write(&(io.getFileChunk + i), FIFO_SIZE_BYTES);
+  //   delay(1000);
+  // }
+
+  // /* Signify that we are done to the other Arduino */
+  // radio.write(io.END_TX_CHUNK, FIFO_SIZE_BYTES);
+  // delay(1000);
 
   #if DEBUG
   io.send(io.getFileChunk());
