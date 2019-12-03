@@ -35,9 +35,9 @@ while [ "$file_path" != "q" ]; do
 	if [[ -e "$file_path" ]] && [[ ! -d "$file_path" ]]; then
 
 		# if our file exits, we convert it to raw hex and send
-		raw_hex=$(cat $file_path)
+		# raw_hex=$(xxd -p $file_path)
 		if [ "$file_path" != "q" ]; then
-			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path "$raw_hex" -W 2> ./logs/error-log-tx.txt
+			python3 ./scripts/send_hex.py $DEVICE_PATH$DEV_PORT $BAUD_RATE $file_path -W 2> ./logs/error-log-tx.txt
 			printf "Sent!\n"
 		fi
 	elif [ "$file_path" != "q" ]; then

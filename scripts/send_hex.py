@@ -35,6 +35,7 @@ Sends:
 
 import sys
 import serial
+from subprocess import check_output
 from arduino_serial_io import *
 
 # used to debug communication
@@ -42,6 +43,7 @@ DEBUG = 0
 
 
 if __name__ == "__main__":
+    
     raw_hex_bytes = bytearray()  # our file to be sent
     file_extension_bytes = bytearray()  # file extension being sent over, used for decoding
     file_extension = []
@@ -58,7 +60,14 @@ if __name__ == "__main__":
 
     # populating our byte arrays
     file_extension_bytes.extend(file_extension)
-    raw_hex_bytes.extend(map(ord, sys.argv[4]))
+
+    # get file data here as passing it through argv 
+    # may not work
+    file_data = check_output('xxd -p ' + sys.argv[3], shell=True)
+    print(type(file_data))
+    file_data = str(file_data)
+    
+    raw_hex_bytes.extend(map(ord, file_data))
 
     channel, address = setConfig()
 

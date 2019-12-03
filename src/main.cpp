@@ -27,6 +27,7 @@ void loop() {
   radio.openWritingPipe(io.getAddressBytes());
   radio.setPALevel(RF24_PA_HIGH);
   radio.setDataRate(RF24_250KBPS);
+  radio.setRetries(15, 15);
   radio.stopListening();
 
   io.handshake();
@@ -34,19 +35,19 @@ void loop() {
 
   /* Send extension */
   radio.write(io.getExtension(), FIFO_SIZE_BYTES);
-  delay(1000);
+  delay(10);
 
-  radio.write(io.getExtension(), FIFO_SIZE_BYTES);
-  delay(1000);
+  // radio.write(io.getExtension(), FIFO_SIZE_BYTES);
+  // delay(1000);
 
-  /* 
+  /*
     * Shake between every transaction to make signify to the computer that we are
     * ready for our next chunk of data
     */
   io.handshake();
   io.setFileChunkSize();
 
-  /* 
+  /*
   * We keep filling and sending our chunks until we do not have enough bytes to
   * full our entire chunk array, at which point we break the while loop,
   * reset our array, and send the reamining bit of our file
@@ -55,13 +56,12 @@ void loop() {
     io.setFileChunk();
 
     // TODO: make this a function
-    uint8_t curr_chunk_size = io.getFileChunkSize();
     char * curr_chunk = io.getFileChunk();
-    
+   
     int i {0};
-    while (i < curr_chunk_size - FIFO_SIZE_BYTES) {
+    while (i < MAX_CHUNK_CHARS - FIFO_SIZE_BYTES) {
       radio.write(curr_chunk + i, FIFO_SIZE_BYTES);
-      delay(1000);
+      delay(10);
       i += FIFO_SIZE_BYTES;
     }
 
@@ -71,24 +71,20 @@ void loop() {
   io.emptyFileChunk();
   io.setFileChunk();
 
-  uint8_t curr_chunk_size = io.getFileChunkSize();
+
   char * curr_chunk = io.getFileChunk();
-  
+
   int i {0};
-  while (i < curr_chunk_size - FIFO_SIZE_BYTES) {
+  while (i < MAX_CHUNK_CHARS - FIFO_SIZE_BYTES) {
     radio.write(curr_chunk + i, FIFO_SIZE_BYTES);
-    delay(1000);
+    delay(10);
     i += FIFO_SIZE_BYTES;
   }
 
-  radio.write(curr_chunk + i - FIFO_SIZE_BYTES, FIFO_SIZE_BYTES);
-  delay(1000);
-
-
   /* Signify that we are done to the other Arduino */
   radio.write(io.END_TX_CHUNK, FIFO_SIZE_BYTES);
-  delay(1000);
-  
+  delay(10);
+ 
 
   io.softReset();
 }
