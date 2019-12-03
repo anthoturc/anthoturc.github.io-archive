@@ -94,6 +94,14 @@ void loop() {
                   ' ', 
                   'W', 'o', 'r', 'l', 'd', '\0'};
   radio.writeSPI(buff, 12);
-  Serial.println("gimme ya butt cheeks");
+  Serial.println("gimme ya grapes");
   delay(2000);
+
+  if (radio.txFIFOFull()) {
+    Serial.println("FIFO full");
+  } else if (radio.txFIFOEmpty()) {
+    Serial.println("FIFO empty");
+  } else {
+    Serial.println("FIFO not empty");
+  }
 }
