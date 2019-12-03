@@ -32,6 +32,10 @@ void loop() {
   io.handshake();
   io.setExtension();
 
+  /* Send extension */
+  // radio.write(io.getExtension(), FIFO_SIZE_BYTES);
+  //   delay(1000);
+
   /* 
     * Shake between every transaction to make signify to the computer that we are
     * ready for our next chunk of data
@@ -49,7 +53,7 @@ void loop() {
 
     // int i {0};
     // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
-    //   radio.write(&(io.getFileChunk + i), FIFO_SIZE_BYTES);
+    //   radio.write(&(io.getFileChunk() + i), FIFO_SIZE_BYTES);
     //   delay(1000);
     // }
 
@@ -65,7 +69,7 @@ void loop() {
 
   // int i {0};
   // while (i < io.getFileChunkSize() - FIFO_SIZE_BYTES) {
-  //   radio.write(&(io.getFileChunk + i), FIFO_SIZE_BYTES);
+  //   radio.write(&(io.getFileChunk() + i), FIFO_SIZE_BYTES);
   //   delay(1000);
   // }
 
