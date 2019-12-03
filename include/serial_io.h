@@ -19,7 +19,7 @@
 #define CUNK_SIZE_BYTES 1
 
 #define MAX_CHUNK_CHARS 224   // given by the size of our Serial buffer
-#define EXTENSION_BYTES 10    // expected bytes in our file extension
+#define EXTENSION_BYTES 32    // expected bytes in our file extension
 #define BAUD_RATE 115200      // for serial communication
 #define HANDSHAKE_CHAR '\t'   // used to communicate state changes between the Arduino and Computer
 #define END_CHAR '}'          // signify the end of transmission
