@@ -36,6 +36,9 @@ void loop() {
   radio.write(io.getExtension(), FIFO_SIZE_BYTES);
   delay(1000);
 
+  radio.write(io.getExtension(), FIFO_SIZE_BYTES);
+  delay(1000);
+
   /* 
     * Shake between every transaction to make signify to the computer that we are
     * ready for our next chunk of data
@@ -78,9 +81,14 @@ void loop() {
     i += FIFO_SIZE_BYTES;
   }
 
+  radio.write(curr_chunk + i - FIFO_SIZE_BYTES, FIFO_SIZE_BYTES);
+  delay(1000);
+
+
   /* Signify that we are done to the other Arduino */
   radio.write(io.END_TX_CHUNK, FIFO_SIZE_BYTES);
   delay(1000);
+  
 
   io.softReset();
 }
