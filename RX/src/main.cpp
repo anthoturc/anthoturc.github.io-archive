@@ -26,21 +26,11 @@ void loop() {
   radio.setAddressWidth(ADDRESS_BYTES);
   radio.setChannel(io.getChannel());
   radio.openReadingPipe(0, io.getAddressBytes());
-  radio.setPALevel(RF24_PA_HIGH);
+  radio.setPALevel(RF24_PA_MAX);
   radio.setDataRate(RF24_250KBPS);
   radio.startListening();
 
-  /* Send file extension (first thing to be sent) */
-  while (true) {
-    if (radio.available(0)) {
-      radio.read(FIFO_BUFFER, FIFO_SIZE_BYTES);
-      io.handshake();
-      io.send(FIFO_BUFFER);
-      break;
-    }
-  }
-
-  /* Then send file in chunks until told to stop */
+  /* Send file and extension in chunks until told to stop */
   while (FIFO_BUFFER[0] != END_CHAR) {
     if (radio.available(0)) {
       radio.read(FIFO_BUFFER, FIFO_SIZE_BYTES);

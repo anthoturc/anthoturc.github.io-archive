@@ -3,7 +3,6 @@
 Module contains all the functions and constants neccessary for serial communication
 with an Arduino to perform nRF24L01+ RF communication.
 """
-import time
 
 # We are going to store the configured integers in our Arduino in a Union,
 # by sending over our individal bytes and storing them in memory.
@@ -43,7 +42,7 @@ FLUSH_SIGNAL = bytearray()
 FLUSH_SIGNAL.extend([ord(HANDSHAKE_CHAR) for _ in range(HANDSHAKE_REPS)])
 
 # size of char array in union representing extension on Arduino
-EXTENSION_LEN = 10
+EXTENSION_LEN = 32
 
 # Max bytes to send over to the Arduino at one time. We send 224 bytes because it is
 # a multiple of 32, the size of our our FIFO buffer on the nRF24L01+ chip, and it still
@@ -108,7 +107,6 @@ def handshake(ser):
     """
     ser.write(HANDSHAKE_BYTE)
     curr = ""
-    start_time = time.time()
 
    # We need two while loops because we need to remain in our
    # hanshake state until the Arduino sends over data, but that
@@ -118,11 +116,6 @@ def handshake(ser):
     while curr != HANDSHAKE_CHAR:
         while curr != HANDSHAKE_CHAR and ser.in_waiting:
             curr = ser.read(1).decode("utf-8")
-            if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
-                raise Exception('Handshake time limit of {0}sec exceeded'.format(MAX_HANDSHAKE_SEC))
-
-        if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
-            raise Exception('Handshake time limit of {0}sec exceeded'.format(MAX_HANDSHAKE_SEC))
 
 
 def chunkGenerator(data):
