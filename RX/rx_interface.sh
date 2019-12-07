@@ -4,7 +4,6 @@ DEVICE_PATH="/dev/"
 BAUD_RATE=115200
 LOG_PATH="./logs/"
 RX_FILE_PATH="./rx-files/"
-# DEVICE_PATH="/dev/cu.SLAB_USBtoUART"
 
 if [[ ! -e "$LOG_PATH" ]]; then
 	mkdir $LOG_PATH
