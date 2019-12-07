@@ -107,10 +107,6 @@ def handshake(ser):
     """
     ser.write(HANDSHAKE_BYTE)
     curr = ""
-<<<<<<< HEAD:RX/scripts/arduino_serial_io.py
-=======
-    # start_time = time.time()
->>>>>>> tx-for-pres:TX/scripts/arduino_serial_io.py
 
    # We need two while loops because we need to remain in our
    # hanshake state until the Arduino sends over data, but that
@@ -120,14 +116,6 @@ def handshake(ser):
     while curr != HANDSHAKE_CHAR:
         while curr != HANDSHAKE_CHAR and ser.in_waiting:
             curr = ser.read(1).decode("utf-8")
-<<<<<<< HEAD:RX/scripts/arduino_serial_io.py
-=======
-            # if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
-            #     raise Exception('Handshake time limit of {0}sec exceeded'.format(MAX_HANDSHAKE_SEC))
-
-        # if (time.time() - start_time) > MAX_HANDSHAKE_SEC:
-        #     raise Exception('Handshake time limit of {0}sec exceeded'.format(MAX_HANDSHAKE_SEC))
->>>>>>> tx-for-pres:TX/scripts/arduino_serial_io.py
 
 
 def chunkGenerator(data):
@@ -168,33 +156,6 @@ def enableTX(ser):
     ser.write(TX_BYTE)
 
 
-def printData(ser, end_char='\n'):
-    """
-    Prints data sent to the computer from the Arduino over seral.
-    Transmissions are seperated by the HANDSHAKE_CHAR.
-
-    Params:
-        ser:
-            Our initiallized pyserial serial port
-        end_char:
-            String: End line character after print statement
-
-
-    Outputs:
-        None
-    """
-    data = ""
-    curr = ""
-    while curr != HANDSHAKE_CHAR:
-        while curr != HANDSHAKE_CHAR and ser.in_waiting:
-            data += curr
-            curr = ser.read(1).decode("utf-8")
-
-    print(data, end=end_char)
-
-
-<<<<<<< HEAD:RX/scripts/arduino_serial_io.py
-
 def getData(ser):
     """
     Gets data sent to the computer from the Arduino over seral.
@@ -217,8 +178,6 @@ def getData(ser):
     return data
 
 
-=======
->>>>>>> tx-for-pres:TX/scripts/arduino_serial_io.py
 def setConfig():
     """
     Uses user input to configure the channel and address parameters for 

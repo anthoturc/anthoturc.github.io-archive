@@ -19,14 +19,9 @@
 #define CUNK_SIZE_BYTES 1
 
 #define MAX_CHUNK_CHARS 224   // given by the size of our Serial buffer
-<<<<<<< HEAD:RX/include/serial_io.h
-#define EXTENSION_BYTES 32    // expected bytes in our file extension
-=======
 #define EXTENSION_BYTES 10    // expected bytes in our file extension
-#define FIFO_SIZE_BYTES 32
->>>>>>> tx-for-pres:TX/include/serial_io.h
 #define BAUD_RATE 115200      // for serial communication
-#define FIFO_SIZE_BYTES 32
+#define FIFO_SIZE_BYTES 32    // size of FIFO in bytes, used to configure buffers for serial data
 #define HANDSHAKE_CHAR '\t'   // used to communicate state changes between the Arduino and Computer
 #define END_CHAR '}'          // signify the end of transmission
 #define TX_CHAR '~'           // at_cmd UART char with matching counterpart in Python receive_hex script 
@@ -73,41 +68,181 @@ public:
   SerialIO();
 
   /* Getters */
+  /*
+   * Getter for the board_state (configuring or not)
+   */
   board_state_e getBoardState();
+
+  /*
+   * Getter for file_extension, set after setConfig() is run
+   */
   char * getExtension(void);
+
+  /*
+   * Getter for input_address.bytes, set after setConfig() is run
+   */
   uint8_t * getAddressBytes(void);
+
+  /*
+   * Getter for input_address.num, set after setConfig() is run
+   */
   uint32_t getAddressNum(void);
+
+  /*
+   * Getter for input_channel, set after setConfig() is run
+   */
   uint8_t getChannel(void);
+
+  /*
+   * Getter for file_chunk, set after setFileHexChunk() is run
+   */
   char * getFileChunk(void);
+
+  /*
+   * Getter for next_chunk_size, set after setFileChunkSize() is run
+   */
   uint8_t getFileChunkSize(void);
+
+  /*
+   * Gets the expected state of the radio (either tx or rx) as determined by the raw
+   * at_cmd interrupt flag
+   * 
+   * Outputs:
+   *  TX_MODE == 1 if Arduino expects the radio to be in rx mode
+   *  RX_MODE == 0 if Arduino expects the radio to be in tx mode
+   */
   uint8_t getExpectedRadioState(void); 
 
+
   /* Setters */
-  void setFromSerial(char *, uint32_t);
-  void setFromSerial(uint8_t *, uint32_t);
-  void setConfig();
+
+  /*
+   * Reads from Serial to set a variable of a predetermined size, by setting
+   * one byte at a time.  
+   * 
+   * Params:
+   *  toSet: 
+   *    Our char * to set over serial
+   *  size:
+   *    size in bytes of toSet
+   */
+  void setFromSerial(char * toSet, uint32_t size);
+
+  /*
+   * Reads from Serial to set a variable of a predetermined size, by setting
+   * one byte at a time.
+   * 
+   * Params:
+   *  toSet: 
+   *    Our uint8_t * to set over serial
+   *  size:
+   *    size in bytes of toSet
+   */
+  void setFromSerial(uint8_t * toSet, uint32_t size);
+
+  /*
+   * SetConfig takes the user input channel and address, sent via the config.py script, and stores
+   * the variables locally on the Arduino.
+   * 
+   * First we flush the Serial to prepare for communication, then we set our channel and address
+   * over serial, at which point we are ready for communication.
+   * 
+   * Note that channel must be sent first over transmission, then address.  This is taken
+   * into account in config.py script.
+   */
+  void setConfig(void);
+
+  /*
+   * Function setExtension() reads data sent over serial to set the desired file
+   * extension so we can decode our sent hex file on the RX side.
+   */
   void setExtension(void);
-  void setFileChunkSize(void);
+
+  /*
+   * Function setFileChunk() reads raw hex of our to-be-sent file over serial
+   * to set our next file chunk, which will be sent over from our TX board to our 
+   * RX board.  Note that our file must be sent in chunks because we are unable to 
+   * fit it entirely on the board, so we must determine the size of each chunk via 
+   * setFileMiniChunkSize(), sent to us over serial via the send_hex.py script
+   */
   void setFileChunk(void);
+
+  /*
+   * Function setFileChunkSize() reads data sent over serial to set the size of our
+   * next hex chunk of our to-be-sent file.
+   */
+  void setFileChunkSize(void);
+
+  /*
+   * Function emptyFileChunk() resets file_chunk array by setting all byte values
+   * to 0
+   */
   void emptyFileChunk(void);
+
+  /*
+   * Function emptyFileChunk() resets file_chunk array by setting all byte values
+   * to 0
+   */
   void emptyFileExtension(void);
+
+  /*
+   * Function softReset() resets io object's file parameters while maintaining its 
+   * configuration
+   */
   void softReset(void);
 
   /* Auxillary Functions */
+
+  /*
+   * Function handshake() establishes a line of communication between the computer and Arduino.
+   * First, we (from the Arduino) wait for the computer to say it is ready, then we say we are 
+   * ready back by sending and receiving HANDSHAKE_CHAR over serial
+   */
   void handshake(void);
+
+  /*
+   * flushSerial makes sure that any noise sent over serial at startup is disregarded
+   * by keeping track of how many consecutive FLUSH_CONST we see.  We have successfully
+   * flushed the serial after seeing FLUSH_CONST FLUSH_COUNT in a row.
+   */
   void flushSerial(void);
-  void clearInterruptUART(uint8_t);
+
+  /*
+   * Clears the UART interrupt flag of an interrupt specified by bit number of UART_INT_CLR_REG
+   * 
+   * Params:
+   *  bit:
+   *    bin of UART_INT_CLR_REG to clear
+   */
+  void clearInterruptUART(uint8_t bit);
+
+  /*
+   * Configures the at_cmd interrupt, which, on a high level, is flagged when a predefined character is
+   * sent over UART a predefined number of times with sufficient space in between each each transmission.
+   * 
+   * Params:
+   *  c: 
+   *    our at_cmd character
+   *  reps:
+   *    number of reps needed to determine if we should flag the interrupt
+   */
+  void configAtCmdCharInterrupt(char c, uint8_t reps);
+
 
   /* Arduino -> Computer */
-  void send(char *);
-  void send(char);
-  void send(uint8_t);
-  void send(uint32_t);
+
+  /*
+   * Function send() Prints over serial our data, then sends a HANDSHAKE_CHAR
+   * to indicate that the transmission is over
+   */
+  void send(char * data);
+  void send(char data);
+  void send(uint8_t data);
+  void send(uint32_t data);
 
   char END_TX_CHUNK[32] {'}'};
 
 private:
-  void configAtCmdCharInterrupt(char c, uint8_t reps);
 
   /* -----communication configuration variables----- */
   board_state_e board_state {CONFIG};
