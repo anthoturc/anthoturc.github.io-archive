@@ -381,7 +381,7 @@ namespace nRF24Module {
 
         void readSPI(byte * arr, uint32_t size);
 
-        void writeSPI(byte * arr, uint32_t size);   
+        void writeSPI(char * arr, uint32_t size);   
 
         void flushTXPayload();
         void flushRXPayload();
@@ -394,10 +394,10 @@ namespace nRF24Module {
 
         void setReadingPipeAddr(uint8_t pipe, uint8_t * address);
         void setWritingAddress(uint8_t * address);
+        void setAddressWidth(uint8_t aw);
+        void getWritingAddress(uint8_t * buff);
 
         void setDataRate(data_rate rate);
-
-        void setAddressWidth(uint8_t aw);
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
