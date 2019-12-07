@@ -19,11 +19,23 @@ nRF24::nRF24(uint8_t cePin, uint8_t csnPin)
     SPI.begin();
     pinMode(cePin_, OUTPUT);
     pinMode(csnPin_, OUTPUT);
-
+    // give module some time to settle 
+    digitalWrite(cePin_, LOW);
+    digitalWrite(cePin_, HIGH);
+    delay(5);
     /* address width is 5 bytes by default */
     setAddressWidth(MAX_ADDRESS_WIDTH);
+    
+    setRegister(DYNPD, 0);
+    setRegister(FEATURE, 0);
+    
     /* when intialized the module will be in standby so that the user can configure */
+    flushRXPayload();
+    flushTXPayload();
+
     setToStandBy();
+
+    setRegister(CONFIG, (getRegister(CONFIG) & 0b11111110));
 }
 
 void
@@ -46,7 +58,7 @@ nRF24::setToReceiver()
     setRegister(CONFIG, (getRegister(CONFIG | data)));
     digitalWrite(cePin_, HIGH);
     /* delay for RX settings is 130 micro sec. so delay 1 ms */    
-    delay(1);
+    delayMicroseconds(140);
 
     txMode_ = false;
 }
@@ -56,14 +68,12 @@ nRF24::setToTransmitter()
 {
     /* send to standby mode */
     digitalWrite(cePin_, LOW);
+    delayMicroseconds(400); // TODO: make this a constant
     /* flush the fifo! */
     flushTXPayload();
-    /* set the PRIM_TX field to 0 */
+    /* set the PRIM_RX field to 0 */
     byte data = 0b11111110;
     setRegister(CONFIG, (getRegister(CONFIG) & data));
-    digitalWrite(cePin_, HIGH);
-    /* delay for TX settings is 130 micro sec. so delay 1 ms */    
-    delay(1);
 
     txMode_ = true;
 }
@@ -99,31 +109,49 @@ nRF24::readSPI(byte * arr, uint32_t size)
 void
 nRF24::writeSPI(char * arr, uint32_t size)
 {
+    // write to the TX buffer when the CE pin is low
+    digitalWrite(cePin_, LOW);
+
     beginTransaction();
     
-    data_frame_u df = makeFrame(W_TX_PAYLOAD, NO_DATA);
-    uint8_t status = SPI.transfer(df.atomic_frame.preamble);
+    data_frame_u df = makeFrame(W_TX_PAYLOAD_NO_ACK, NO_DATA);
+    uint8_t status_data = SPI.transfer(df.atomic_frame.preamble);
 
 #if DEBUG
     Serial.print("Status is: ");
-    Serial.println(status);
+    Serial.println(status_data);
 #endif
 
     for (int i = 0; i < size; ++i) {
         SPI.transfer(arr[i]);
     }
-    delay(100);
+
+    // a full 32 bytes need to be sent
+    for (int i = 4; i < 32; ++i) {
+        SPI.transfer(NO_DATA);
+    }
+
     endTransaction();
 
+    digitalWrite(cePin_, HIGH);
+    uint8_t data = 0b00110000;
+    while (!(status() & data)) {}
+
+    digitalWrite(cePin_, LOW);
+
     flushTXPayload();
+    
+    setRegister(STATUS, data);
+    
+    //flushTXPayload();
 }
 
 void 
 nRF24::setChannel(uint8_t channel)
 {
     if (channel > NUM_CHANNELS || channel < 0) channel = 0;
-
-    setRegister(RF_CH, channel);
+    auto CHANNEL_MASK = 0x7F;
+    setRegister(RF_CH, (CHANNEL_MASK & channel));
 }
 
 uint8_t 
@@ -210,6 +238,27 @@ nRF24::setWritingAddress(uint8_t * address)
     }
 
     endTransaction();
+
+    // per data sheet need to also write to RX_ADDR_P0 with address
+    beginTransaction();
+
+    df = makeFrame((W_REGISTER | (REGISTER_MASK & RX_ADDR_P0)), NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+
+    i = 0;
+    for (; i < addressWidth_; ++i) {
+        SPI.transfer(address[i]);
+    }
+
+    for (i = addressWidth_; i < MAX_ADDRESS_WIDTH; ++i) {
+        SPI.transfer(NO_DATA);
+    }
+
+    endTransaction();
+
+    uint8_t buff_sz = 32;
+    setRegister(RX_PW_P0, buff_sz);
+    
 }
 
 void
@@ -327,7 +376,6 @@ nRF24::endTransaction()
     digitalWrite(csnPin_, HIGH);
 }
 
-
 void 
 nRF24::getWritingAddress(uint8_t * buff)
 {    
@@ -339,4 +387,50 @@ nRF24::getWritingAddress(uint8_t * buff)
         buff[i] = SPI.transfer(NO_DATA);
     }
     endTransaction();
+}
+
+bool
+nRF24::txFIFOEmpty()
+{
+    uint8_t tx_empty_bit = 0b00010000; // per the data sheet
+    uint8_t empty_val = 0;
+    uint8_t status = getFIFOStatus(FIFO_STATUS);
+    Serial.print("Empty status is: ");
+    Serial.println(status & tx_empty_bit);
+    return (status & tx_empty_bit) == empty_val; 
+}
+
+bool
+nRF24::txFIFOFull()
+{
+    uint8_t tx_full_bit = 0b00100000;
+    uint8_t full_val = 1;
+    uint8_t status = getFIFOStatus(FIFO_STATUS);
+    Serial.print("Full status is: ");
+    Serial.println(status & tx_full_bit);
+    return (status & tx_full_bit) == full_val;
+}
+
+uint8_t 
+nRF24::status() 
+{
+    beginTransaction();
+    uint8_t status = SPI.transfer(NOP);
+    endTransaction();
+
+    return status;
+}
+
+uint8_t 
+nRF24::getFIFOStatus(uint8_t r)
+{
+    beginTransaction();
+
+    data_frame_u df = makeFrame((R_REGISTER | (REGISTER_MASK & r)), NO_DATA);
+    SPI.transfer(df.atomic_frame.preamble);
+    uint8_t status = SPI.transfer(NO_DATA);
+
+    endTransaction();
+
+    return status;
 }

@@ -281,8 +281,6 @@
 #define MIN_ADDRESS_WIDTH 3
 #define MAX_ADDRESS_WIDTH 5
 
-#define FIFO_SIZE_BYTES 32
-
 /*
  * When writing to a register we take the lower 5 bits
  */
@@ -398,6 +396,13 @@ namespace nRF24Module {
         void getWritingAddress(uint8_t * buff);
 
         void setDataRate(data_rate rate);
+
+        bool txFIFOEmpty();
+
+        bool txFIFOFull();
+
+        uint8_t status();
+
     private:
         uint8_t cePin_;
         uint8_t csnPin_;
@@ -419,6 +424,8 @@ namespace nRF24Module {
         void setToStandBy();
 
         void flushPayload(uint8_t cmd);
+
+        uint8_t getFIFOStatus(uint8_t r);
     };
 }; // nRF24Module
 #endif /* _NRF_24_ */
