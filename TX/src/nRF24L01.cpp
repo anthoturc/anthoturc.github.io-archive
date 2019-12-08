@@ -106,6 +106,10 @@ nRF24::readSPI(byte * arr, uint32_t size)
     endTransaction();
 }
 
+/*
+ *  Unsure of the delays here. Transmission depends on 
+ *  the type of board you have as well.
+ */
 void
 nRF24::writeSPI(char * arr, uint32_t size)
 {
@@ -113,7 +117,7 @@ nRF24::writeSPI(char * arr, uint32_t size)
     digitalWrite(cePin_, LOW);
 
     beginTransaction();
-    
+    /* write a payload with no ack packet */
     data_frame_u df = makeFrame(W_TX_PAYLOAD_NO_ACK, NO_DATA);
     uint8_t status_data = SPI.transfer(df.atomic_frame.preamble);
 
@@ -127,7 +131,7 @@ nRF24::writeSPI(char * arr, uint32_t size)
     }
 
     // a full 32 bytes need to be sent
-    for (int i = 4; i < 32; ++i) {
+    for (int i = size; i < 32; ++i) {
         SPI.transfer(NO_DATA);
     }
 
@@ -223,6 +227,8 @@ nRF24::makeFrame(uint8_t cmd, byte data)
 void
 nRF24::setWritingAddress(uint8_t * address)
 {
+    /* This method should not work when module is not in transmitting mode */
+    if (!txMode_) return;
     beginTransaction();
 
     data_frame_u df = makeFrame((W_REGISTER | (REGISTER_MASK & TX_ADDR)), NO_DATA);

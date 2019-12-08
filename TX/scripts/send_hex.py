@@ -63,9 +63,9 @@ if __name__ == "__main__":
 
     # get file data here as passing it through argv 
     # may not work
-    file_data = check_output('xxd -p ' + sys.argv[3], shell=True)
-    print(type(file_data))
-    file_data = str(file_data)
+    file_data = check_output('cat ' + sys.argv[3], shell=True)
+    
+    file_data = file_data.decode('utf-8')
     
     raw_hex_bytes.extend(map(ord, file_data))
 

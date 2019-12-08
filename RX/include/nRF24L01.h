@@ -278,6 +278,12 @@
 
 #define SPI_SETTINGS SPISettings(SPI_FRQ, MSBFIRST, SPI_MODE0)
 
+
+/*
+ *  These macros correspond to the minimum and 
+ *  maximum number of bytes that are allowed to 
+ *   be taken up by the address.
+ */
 #define MIN_ADDRESS_WIDTH 3
 #define MAX_ADDRESS_WIDTH 5
 
@@ -292,8 +298,7 @@
  * 
  *  These fields can be modeled using bit fields.
  * 
- *  TODO: Check the endianess of the Feather to make sure
- *  the order of the struct fields are correct
+ *  The endianess of the feather and the module are the same!
  */
 namespace nRF24Module {
     typedef struct
@@ -377,28 +382,220 @@ namespace nRF24Module {
     public:
         nRF24(uint8_t cePin, uint8_t csnPin);
 
+        /*
+         *  readSPI
+         *  
+         *  args: 
+         *      arr (byte *)
+         *      size (uint32_t)
+         * 
+         *  Description:
+         *      The readSPI method works by reading
+         *      over `size' bytes from the RX FIFO into
+         *      the buffer `arr'
+         *      
+         *      This is done by reading one byte at a time 
+         */
         void readSPI(byte * arr, uint32_t size);
 
+        /*
+         *  writeSPI
+         *  
+         *  args: 
+         *      arr (char *)
+         *      size (uint32_t)
+         * 
+         *  Description:
+         *      The readSPI method works by sending
+         *      over `size' bytes from the buffer `arr'
+         *      
+         *      This is done by sending one byte at a time
+         *      until the FIFO is full 
+         */
         void writeSPI(char * arr, uint32_t size);   
 
+        /*
+         *  flushTXPayload
+         * 
+         *  args:
+         *      none.
+         *  
+         *  Description:
+         *      The flushTXPayload method will flush the TX FIFO.
+         */
         void flushTXPayload();
+        
+        /*
+         *  flushRXPayload
+         * 
+         *  args:
+         *      none.
+         *  
+         *  Description:
+         *      The flushTXPayload method will flush the RX FIFO.
+         */
         void flushRXPayload();
 
+        /*
+         *  setToReceiver
+         *  
+         *  args:
+         *      none.
+         * 
+         *  Description:
+         *      The setToReciever method transitions 
+         *      the nRF module into the standby mode 
+         *      and adjusts registers to make the device
+         *      a primary reciever.
+         * 
+         *      This is accomplished by following transitions in the 
+         *      state diagram (see data sheet).
+         */
         void setToReceiver();
+
+        /*
+         *  setToTransmitter
+         *  
+         *  args:
+         *      none.
+         * 
+         *  Description:
+         *      The setToTransmitter method transitions 
+         *      the nRF module into the standby mode 
+         *      and adjusts registers to make the device
+         *      a primary transmitter.
+         * 
+         *      This is accomplished by following transitions in the 
+         *      state diagram (see data sheet).
+         */
         void setToTransmitter();
 
+        /*
+         *  setChannel
+         *  
+         *  args:
+         *      channel (uint8_t)
+         * 
+         *  Description:
+         *      The setChannel method will validate the input
+         *      and write the channel to the appropriate register.
+         *      
+         *      Note that the system works "better" when the channel is near 
+         *      the middle of the range of available channels (76). This will
+         *      lead to less interference from nearby bands
+         */
         void setChannel(uint8_t channel);
+
+        /*
+         *  getChannel()
+         * 
+         *  args:
+         *      none.
+         *      
+         *  Description:
+         *      Returns the value of the channel stored in the corresponding register
+         */
         uint8_t getChannel();
 
+        /*
+         *  setReadingPipeAddr
+         * 
+         *  args:
+         *      pipe    (uint8_t)
+         *      address (uint8_t *)
+         * 
+         *  Description:
+         *      Given a pipe and address, the module will be configured to read
+         *      from the pipe (which is a logical address for the RF channel)
+         *      
+         *      Note that the address of the transmitter and the reciever should be
+         *      be the same.
+         */
         void setReadingPipeAddr(uint8_t pipe, uint8_t * address);
+
+        /*
+         *  setWritingAddress
+         *  
+         *  args:
+         *      address - (uint8_t)
+         * 
+         *  Description:
+         *      Set's the address of the transmitter.
+         * 
+         *      Note that the address of the transmitter and the receiver should
+         *      be the same.
+         */
         void setWritingAddress(uint8_t * address);
+
+        /*
+         *  setAddressWidth
+         *  
+         *  args: 
+         *      aw - (uint8_t)
+         *  
+         *  Description:
+         *      Sets the address width. This width determines the number of bytes that will be
+         *      used in the address itself. If the address is greater than MAX_ADDRESS_WIDTH then
+         *      the aw is set to MAX_ADDRESS_WIDTH. The 
+         */
         void setAddressWidth(uint8_t aw);
+
+        /*
+         *  getWritingAddress
+         *  
+         *  args:
+         *      buff (uint8_t)
+         *  
+         *  Description:
+         *      Retrieves the address from the module and 
+         *      and fils the buffer with the address.
+         * 
+         *      Note that the address/address width must be set
+         *      before using this method. Otherwise the behavior
+         *      is undefined. 
+         */
         void getWritingAddress(uint8_t * buff);
 
+
+        /*
+         *  setDataRate
+         *      
+         *  args:
+         *      rate (data_rate)
+         *      
+         *  Description:
+         *      Given a data rate from the following list
+         *      { DATA_RATE_1MBPS, DATA_RATE_2MBPS, DATA_RATE_250KBPS }
+         *      the module is set to that rate. 
+         */
         void setDataRate(data_rate rate);
 
+        /*
+         *  txFIFOEmpty
+         *  
+         *  args:
+         *      none. 
+         *  
+         *  Description:
+         *      Returns whether the txFIFO is full
+         *      
+         *      Note that this is typically used to ensure
+         *      that data is in the fifo. 
+         */
         bool txFIFOEmpty();
 
+        /*
+         *  txFIFOFull
+         * 
+         *  args:
+         *      none.
+         * 
+         *  Description: 
+         *      Returns whethere the txFIFO is empty
+         *      
+         *      Note that this is typically used to ensure that 
+         *      TX FIFO is empty when flushed.
+         */
         bool txFIFOFull();
 
         uint8_t status();
@@ -411,20 +608,120 @@ namespace nRF24Module {
 
         data_frame_u makeFrame(uint8_t cmd, byte data);
         
-        /* modification of registers */
+        /*
+         *  setRegister
+         *  
+         *  args:
+         *      r       (uint8_t)
+         *      data    (uint8_t)
+         *  
+         *  Description: 
+         *      This private method is used to configure registers
+         *      on the module. The majority of them only require
+         *      a single byte of data to be configured.
+         */
         void setRegister(uint8_t r, uint8_t data);
+
+        /*
+         *  getRegister
+         * 
+         *  args: 
+         *      r (uint8_t)
+         *  
+         *  Description:
+         *      This private method is used to get the value stored in
+         *      a register. This method is typically used to ensure that
+         *      entire registers are not overwritten.
+         */
         uint8_t getRegister(uint8_t r);
 
+        /*
+         *  beginTransaction
+         *  
+         *  args:
+         *      none.
+         *  
+         *  Description:
+         *      This method is a wrapper for the SPI method.
+         *      It was made to reduce the amount of duplicated 
+         *      code. 
+         */
         void beginTransaction();
+
+        /*
+         *  endTransaction
+         *  
+         *  args:
+         *      none.
+         * 
+         *  Description:
+         *      Similar to the beginTransaction method, this
+         *      method is a wrapper for the SPI end transaction method.
+         *      It was made to reduce the amount of duplicated code.
+         */
         void endTransaction();
 
+        /*
+         *  powerOn
+         *  
+         *  args:
+         *      none. 
+         * 
+         *  Description:
+         *      Puts the module into standby mode. 
+         *      This occurs when the module is going to be made
+         *      a transmitter or receiver. See the state diagram
+         *      in the data sheet for more detail.
+         */
         void powerOn();
+
+        /*
+         *  powerOff
+         *  
+         *  args: 
+         *      none.
+         *  
+         *  Description:
+         *      Places the module into the power down mode.
+         *      This method is not really used during operation
+         *      but is here for completeness.
+         */
         void powerOff();
         
+        /*
+         *  setToStandBy
+         *  
+         *  args:
+         *      none.
+         * 
+         *  Description:
+         *      Puts the module into standby mode
+         *      by setting the appropriate registers.
+         */
         void setToStandBy();
 
+        /*
+         *  flushPayload
+         *  
+         *  args:
+         *      cmd (uint8_t)
+         *  
+         *  Description:
+         *      Will flush the payload corresponding to command. The 
+         *      command will either be the TX payload or the RX payload.
+         */
         void flushPayload(uint8_t cmd);
 
+        /*
+         *  getFIFOStatus
+         *  
+         *  args: 
+         *      r (uint8_t)
+         * 
+         *  Description:
+         *      Returns the value of the status register. This method
+         *      was primarily used for debugging the writeSPI method. 
+         */
         uint8_t getFIFOStatus(uint8_t r);
     };
 }; // nRF24Module
