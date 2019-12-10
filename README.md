@@ -51,7 +51,19 @@ Below is a more detailed outline of the milestones that we hit over the last few
 An important topic in embedded systems is communicating between devices and peripherals.  In our project, we were faced with the daunting need to communicating not only between devices and peripherals, but also between devices.
 
 ### Setup and BOM
-ANTHO
+Our setup (per system) consisted of the following:
+* 10pcs Arduino nRF24L01+ 2.4 GHz Wireless RF Transceiver Module (11.98 USD) 
+* Adafruit HUZZAH32 - ESP32 Feather Board (19.95 USD)
+* Premium Female/Male 'Extension' Jumper Wires (1.95 USD)
+* USB cable - USB A to Micro USB-B (2.95 USD)
+* PC (prices vary)
+
+Total: >= 24.85 USD
+
+These are the required parts for just one system. Another system would be twice this amount. 
+
+The setup is shown below:
+![](https://github.com/anthoturc/anthoturc.github.io/blob/master/setup.png)
 
 ### Communication Chain
 As per our architecture, we needed to communicate between 6 devices peripherals at once: two computers, two feathers, and two transceivers.  We also needed a way for users to interface with our entire systems.  Thus, our project could be can be broken down into 4 distinct parts of the communication chain (from one computer to the next) as follows:
