@@ -42,8 +42,11 @@ We decided to perfer an Agile-like schedule for development.  We used Github's "
 
 We completed all user stories except for 3: "Checksum" (to check for data loss in transmission), "As Transceiver" (Feathers and switch between RX and TX without reuploading code), and "Encryption" (for added security in transmission)
 
+Below is a more detailed outline of the milestones that we hit over the last few weeks.
+![RFSling Development Schedule](final_scheudle.png)
+
 ## Methods
-An important topic in embedded systems is communicating between devices and peripherals.  In our project, we were faced with the daunting need to communicating not only between devices and peripherals, but also between devices. 
+An important topic in embedded systems is communicating between devices and peripherals.  In our project, we were faced with the daunting need to communicating not only between devices and peripherals, but also between devices.
 
 ### Setup and BOM
 ANTHO
@@ -70,7 +73,13 @@ In the python script, users are first prompted to input their desired channel (o
 ELIJAH
 
 ### Feather and Transceiver
-ANTHO
+Communicaiton between the feather and the transceiver is done over SPI. When looking over the data sheet (see at end of document) we identified the relevant pieces of this communication and encapsulated them via the nRF24L01 library. 
+
+We focused on abstracting the common SPI commands (pg 48 of the data sheet) and manipulation of the register map (pg 54 of the data sheet). This meant that writing data to registers or writing a payload to the TX FIFO, for example, was done throught a simple call to an nRF24 method. 
+
+The data sheet also provided a state diagram (see section 6) that helped us solidify our sense of timings and what methods we should include to ensure that the module was in a state that we expected.
+
+Testing of this funcitonality consisted of writing to registers then reading back the values in those registers. We were able to implement the majority of the functionality offered by the module in transmission mode. However, we could not get the module to actually transmit data. This will be discussed in the issues section.
 
 ### Transceiver and Transceiver
 ANTHO
