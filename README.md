@@ -50,6 +50,7 @@ An important topic in embedded systems is communicating between devices and peri
 
 ### Setup and BOM
 Our setup (per system) consisted of the following:
+* 10pcs Arduino nRF24L01+ 2.4 GHz Wireless RF Transceiver Module (11.98 USD) 
 * Adafruit HUZZAH32 - ESP32 Feather Board (19.95 USD)
 * Premium Female/Male 'Extension' Jumper Wires (1.95 USD)
 * USB cable - USB A to Micro USB-B (2.95 USD)
