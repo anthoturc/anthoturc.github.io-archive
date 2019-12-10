@@ -43,7 +43,7 @@ We decided to perfer an Agile-like schedule for development.  We used Github's "
 We completed all user stories except for 3: "Checksum" (to check for data loss in transmission), "As Transceiver" (Feathers and switch between RX and TX without reuploading code), and "Encryption" (for added security in transmission)
 
 Below is a more detailed outline of the milestones that we hit over the last few weeks.
-![RFSling Development Schedule](./final_scheudle.png)
+![RFSling Development Schedule](https://github.com/anthoturc/anthoturc.github.io/blob/master/final_schedule.png)
 
 ## Methods
 An important topic in embedded systems is communicating between devices and peripherals.  In our project, we were faced with the daunting need to communicating not only between devices and peripherals, but also between devices.
