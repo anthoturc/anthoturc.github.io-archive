@@ -53,7 +53,7 @@ Our setup (per system) consisted of the following:
 * Adafruit HUZZAH32 - ESP32 Feather Board (19.95 USD)
 * Premium Female/Male 'Extension' Jumper Wires (1.95 USD)
 * USB cable - USB A to Micro USB-B (2.95 USD)
-* PC (prices varies)
+* PC (prices vary)
 
 Total: >= 24.85 USD
 
@@ -90,13 +90,14 @@ We focused on abstracting the common SPI commands (pg 48 of the data sheet) and 
 
 The data sheet also provided a state diagram (see section 6) that helped us solidify our sense of timings and what methods we should include to ensure that the module was in a state that we expected.
 
-Testing of this funcitonality consisted of writing to registers then reading back the values in those registers. We were able to implement the majority of the functionality offered by the module in transmission mode. However, we could not get the module to actually transmit data. This will be discussed in the issues section.
+Testing of this funcitonality consisted of writing to registers then reading back the values in those registers. We were able to implement the majority of the functionality offered by the module in transmission mode. However, we could not get the module to actually transmit data. This will be discussed in the issues section. Eventually, we did decide to use an outside library that had all of the functionality we needed. This was crucial for sending data over RF.
 
 ### Transceiver and Transceiver
-ANTHO
+This portion of the communication is out of the scope of this course. While it is interesting to know how the modules are able to communicate over RF, our project and research is more closely related to what we discussed over the course of the semester.
 
 ## Results
-ANTHO
+We believe we were successful in creating systems that communicated data remotely. The demo of our project is below.
+[Demo](https://www.youtube.com/watch?v=QZxoFUmi7cs)
 
 ## Issues
 
@@ -105,14 +106,11 @@ Intro to issues... ANTHO?
 ### Syncronizing Communication ELIJAH
 See [Computer and Feather](#Computer-and-Feather).
 
-### Interfacing with the nRF24L01+ chip ANTHO
-ANTHO
-
 ### As Transeiver
 ELIJAH
 
 ### Data Loss
-ANTHO
+This is not entirely obvious from the demo, but we do experience data loss during transmission. We believe that this has to do with our configuration of the module itself. The library we used does offer access to more advanced capabilites, such as retransmission of packets, but we did not explore those options very much. 
 
 
 GET RID OF RAW HEXXXXXXXX
