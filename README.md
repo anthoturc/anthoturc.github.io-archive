@@ -108,10 +108,65 @@ On the Feather's side, with each data chunk we load data into the FIFOs, 32 byte
 After configuration, the Arduino will enter a while loop, continuously reading from the transceiver's FIFO, handshaking, then sending data over to the computer until it reads a special END_CHAR sent over FIFO at which point it will send the END_CHAR to the computer to signify the end of transmission. The computer has mirrored functionality, first storing the file extension, then storing the sent over chunks of the file while intermittently handshaking.  Once the computer reads the END_CHAR, it saves the compiled file with sent over file extension in the rx-files directory.
 
 ### Feather and Transceiver
-Initially:
+Initially we wanted to create our own driver for the nRF24L01+ module. We thought this would be instructive and a great chance to work with a peripheral that we were not familiar or comfortable with. Towards the end of the project we ran into issues getting our module to transmit data (discussed in the issues section). For the sake of time we decided to make use of the NRF24 library because it had all of the functionality we wanted and more. This library is well documented and linked in the references section. We discuss our approach to desiging the driver below.
+
 Communication between the feather and the transceiver is done over SPI. When looking over the data sheet, we identified the relevant pieces of this communication and encapsulated them in the nRF24L01 library. 
 
-We focused on abstracting the common SPI commands (pg 48 of the nRF24L01+'s data sheet) and manipulation of the register map (pg. 54 of the nRF24L01+'s data sheet). This meant that writing data to registers or writing a payload to the TX FIFO, for example, was done through a simple call to an nRF24 method.
+For example, in nRF24L01.h we created the following enum to represent the commands (pg 48 of the nRF24L01+'s data sheet) provided by Nordic Semiconductor:
+
+```cpp
+enum commands
+{
+    R_RX_PAYLOAD            = 0b01100001,
+    W_TX_PAYLOAD            = 0b10100000,
+    FLUSH_TX                = 0b11100001,
+    FLUSH_RX                = 0b11100010,
+    REUSE_TX_PL             = 0b11100011,
+    R_RX_PL_WID             = 0b01100000,
+    R_REGISTER              = 0b00000000,
+    W_REGISTER              = 0b00100000,
+    W_ACK_PAYLOAD           = 0b10101000,
+    W_TX_PAYLOAD_NO_ACK     = 0b10110000,
+    NOP                     = 0b11111111,    
+};
+```
+
+There are four primary commads that are used to communicate between the feather and the module. Each command is sent over via an SPI tranaction. The first of these is the ```nRF24::getRegister(r)``` method. This method will take in a desired register from the following enum:
+
+```cpp
+enum registers
+{
+    CONFIG          = 0x00,
+    EN_AA           = 0x01,
+    EN_RXADDR       = 0x02,
+    ...
+};
+```
+
+and use the ```R_TX_PAYLOAD``` from commands enum to create a data frame with the union below.
+
+```cpp
+typedef struct
+{
+    /* data to be sent */
+    uint8_t data;
+    /* preable is 1 byte */
+    uint8_t preamble;
+} bits_t;
+
+typedef union
+{
+    /* This is the frame that will be send over SPI */
+    uint16_t data_frame;
+    /* This is the frame that will be send over SPI */
+    bits_t atomic_frame;    
+} data_frame_u;
+```
+
+The primary use of this method was for the next command we immplemented: ```nRF24::setRegister(r, d)```. This method will 
+take a register from the registers map and create a data frame using the data ```d``` and ```R_TX_PAYLOAD```. This method is used with the previous one to ensure that any given register's data is not overwritten by attempting to set specific bits in the register.
+
+The last two "relevant" commands are based on the sending and recieveing data. Since they are so similar, we only discuss the ```nRF24::writeSPI(arr, size)``` method.
 
 The data sheet also provided a state diagram (see section 6) that helped us solidify our sense of timings and what methods we should include to ensure that the module was in a state that we expected.
 
