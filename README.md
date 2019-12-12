@@ -131,7 +131,7 @@ enum commands
 };
 ```
 
-There are four primary commads that are used to communicate between the feather and the module. Each command is sent over via an SPI tranaction. The first of these is the ```nRF24::getRegister(r)``` method. This method will take in a desired register from the following enum:
+There are four primary commads that are used to communicate between the feather and the module. Each command is sent over via an SPI transaction. The first of these is the ```nRF24::getRegister(r)``` method. This method will take in a desired register from the following enum:
 
 ```cpp
 enum registers
@@ -143,7 +143,7 @@ enum registers
 };
 ```
 
-and use the ```R_TX_PAYLOAD``` from commands enum to create a data frame with the union below.
+and use the ```R_TX_PAYLOAD``` from the commands enum to create a data frame (shown below). Note that we layed out the struct this way because the ESP 32's byte order is LITTLE ENDIAN.
 
 ```cpp
 typedef struct
@@ -164,15 +164,13 @@ typedef union
 ```
 
 The primary use of this method was for the next command we immplemented: ```nRF24::setRegister(r, d)```. This method will 
-take a register from the registers map and create a data frame using the data ```d``` and ```R_TX_PAYLOAD```. This method is used with the previous one to ensure that any given register's data is not overwritten by attempting to set specific bits in the register.
+take a register from the registers map and create a data frame using the data ```d``` and ```W_TX_PAYLOAD```. This method is used with the previous one to ensure that any given register's data is not overwritten by attempting to set specific bits in the register.
 
-The last two "relevant" commands are based on the sending and recieveing data. Since they are so similar, we only discuss the ```nRF24::writeSPI(arr, size)``` method. This method will take in an array, ```arr``` of ```size``` bytes and transfer the bytes to the TX FIFO. In order to make the logic behind this method simpler to implement, we chose to only fill one of the TX FIFOs. This meant that we only needed to consider whether or not one FIFO was full or empty. It also implied that we only worried about flushing data from one FIFO as well. Furthermore, because we are only using one FIFO, we decided to fill all 32 bytes of the FIFO even when there were ```size``` was less than 32 bytes. The ```nRF24::readSPI(arr, size)``` is similar except that it reads bytes from the RX FIFO and fills the ```arr``` with them.
+The last two "relevant" commands are based on the sending and recieveing data. Since they are so similar, we only discuss the ```nRF24::writeSPI(arr, size)``` method. This method will take in an array, ```arr``` of ```size``` bytes and transfer the bytes to the TX FIFO. In order to make the logic behind this method simpler to implement, we chose to only fill one of the TX FIFOs. This meant that we only needed to consider whether or not one FIFO was full or empty. It also implied that we only worried about flushing data from one FIFO as well. Furthermore, because we are only using one FIFO, we decided to fill all 32 bytes of the FIFO even when ```size``` was less than 32 bytes. The ```nRF24::readSPI(arr, size)``` is similar except that it reads bytes from the RX FIFO and fills the ```arr``` with them.
 
 The data sheet also provided a state diagram (see section 6) that helped us solidify our understanding of what events needed to occur within our methods. This helped us be confident about the state that the module was in before, during, and after a call to one of the methods in our nRF24L01 library.
 
 Testing of this functionality consisted of writing to registers, then reading back the values in those registers. We were able to implement the majority of the functionality offered by the module in transmission mode. However, we could not get the module to actually transmit data. This will be discussed in the issues section.
-
-As mentioned above, the NRF24 library (see the libraries section) enabled us to actually transmit data. We did look at the implementation of the library at saw that our implementation, while a little more crude, was similar to to the NRF24 library. It appeared that the biggest differences were how timings were done and detection of the type of board that was being used. That is, the library depended on the type of hardware that used the NRF24 library. 
 
 ### Transceiver and Transceiver
 This portion of the communication is out of the scope of this course. While it is interesting to know how the modules are able to communicate over RF, our project and research is more closely related to what we discussed over the course of the semester.  For more information see the nRF24L01+'s data sheet. 
@@ -190,7 +188,7 @@ During the project, we faced 4 principal issues, included below:
 See [Computer and Feather](#Computer-and-Feather).
 
 ### Interfacing with the nRF24L01+ chip
-ANTHO
+As mentioned in the [feather and transceiver](#Feather-and-Transceiver) section we were unable to use our hand written library. Instead, we made use of the NRF24 library (see the libraries section), which enabled us to actually transmit data. We did look at the implementation of the library and saw that our implementation, while a little more crude, was similar to the NRF24 library. It appeared that the biggest differences were how timings were done and detection of the type of board that was being used (this happened at compile time). That is, the library depended on the type of hardware that used the NRF24 library. 
 
 ### As Transceiver
 Ideally, we would have the same code uploaded to both boards involved in communication, and ideally, both devices would be able to receive and send files.  When we were initially planning our project, we envisioned the devices functioning as receivers by default and only transmitting when users indicated the wished to do so, similar to a walkie talkie.  To accomplish this, we started by exploring at_cmd UART interrupts, where an interrupt would be triggered on the Feather when a pre-configured at_cmd char is observed a certain number of times in a row without too much time in between at_cmd char transmissions and with enough time in between prior and post communication after the at_cmd sequence is sent (see esp32 data sheet for more information).  Reading the data sheet, we were able to identify the registers responsible for configuring, enabling, and clearing the interrupt, which we included in esp32AtCmdUART.h.  We ran into trouble, however, when we tried to attatch ISR's to interrupt events.  We saw that the esp-idf framework provided functionality to do so, but we were unable to use their functions from within the Arduino framework, and the esp32 technical referance manual does not explicitly describe the details of this mechanism.  Thus, we looked into the source code to try to find esp's implementation of esp_intr_alloc, used to attach ISR's to specific interrupt events, and we initially could not find its implementation, only its header file.  We cynically thought that esp was forcing us to use their framework over the Arduino framework to do so.  Looking back over their codebase, however, we realized that we were just looking in the wrong place and implementations are, indeed, included.  Regardless, in comical fashion, we realized that interrupts were not the best tool to use here because we would not want to grant the user the ability to stop functioning as a receiver while currently receiving a file.  Thus, we decided to poll the at_cmd UART interrupt status in our main loop to determine whether the device would function as a receiver or transmitter.  On a high level, the loop within main looked something like this:
